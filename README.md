@@ -10,6 +10,10 @@ log files and produces a single, fully offline HTML report with:
 
 ---
 
+<img width="1906" height="933" alt="Screenshot from 2026-02-26 01-10-44" src="https://github.com/user-attachments/assets/f217dc49-25f5-4aeb-be60-06ba908a305a" />
+
+---
+
 ## Files
 
 | File | Purpose |
