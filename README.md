@@ -1,4 +1,4 @@
-# BlockRun Usage Reports
+# BlockRun Usage Reports for ClawRouter
 
 Self-contained toolkit that scans a folder of daily `usage-YYYY-MM-DD.jsonl`
 log files and produces a single, fully offline HTML report with:
