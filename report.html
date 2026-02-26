@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlockRun Reports · blockrun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;600&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0f1320;
+  --bg2:       #141929;
+  --surface:   #1a2035;
+  --surface2:  #1f2640;
+  --border:    rgba(180,195,230,0.09);
+  --border2:   rgba(180,195,230,0.15);
+  --text:      #ccd6f0;
+  --dim:       #7a86a8;
+  --faint:     rgba(180,195,230,0.05);
+  --teal:      #6ee7df;
+  --amber:     #f5c97e;
+  --mauve:     #d4a0c8;
+  --sage:      #86efac;
+  --blue:      #93c5fd;
+  --font-hdr:  'Bebas Neue', sans-serif;
+  --font-ui:   'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --sidebar-w: 200px;
+  --radius:    10px;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* subtle grid overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(110,231,223,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(110,231,223,0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* ── Layout ── */
+.layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-w);
+  min-height: 100vh;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  position: sticky; top: 0; align-self: flex-start;
+  height: 100vh; overflow-y: auto;
+  display: flex; flex-direction: column;
+  padding: 20px 0 24px;
+}
+.sidebar-brand {
+  padding: 0 18px 18px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.sidebar-brand h1 {
+  font-family: var(--font-hdr);
+  font-size: 28px;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, var(--teal), var(--blue));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+.sidebar-brand .tagline {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--dim); margin-top: 4px;
+}
+.nav-section-label {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--dim); padding: 8px 18px 4px;
+}
+.nav-link {
+  display: block; padding: 7px 18px;
+  color: var(--dim); text-decoration: none; font-size: 12px;
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nav-link:hover { color: var(--text); background: var(--faint); }
+.nav-link.active { color: var(--teal); border-left-color: var(--teal); background: rgba(110,231,223,0.05); }
+.nav-link .nav-date { display: block; font-size: 11px; color: inherit; }
+.nav-link .nav-meta { display: block; font-size: 9px; color: var(--dim); }
+.nav-link.global-link { color: var(--amber); }
+.nav-link.global-link:hover, .nav-link.global-link.active {
+  color: var(--amber); border-left-color: var(--amber);
+  background: rgba(245,201,126,0.06);
+}
+.sidebar-footer {
+  margin-top: auto; padding: 12px 18px 0;
+  border-top: 1px solid var(--border);
+  font-size: 9px; color: var(--dim); letter-spacing: 1px;
+  line-height: 1.8;
+}
+
+/* ── Main content ── */
+.content { flex: 1; padding: 24px 28px; min-width: 0; }
+
+/* ── Dashboard sections ── */
+.dashboard-section { margin-bottom: 48px; }
+.dashboard-section + .dashboard-section {
+  padding-top: 40px;
+  border-top: 1px solid var(--border);
+}
+.section-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 16px;
+}
+.section-tag {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 3px;
+  margin-right: 10px; vertical-align: middle;
+  font-family: var(--font-mono);
+}
+.section-tag-global { background: rgba(245,201,126,0.15); color: var(--amber); border: 1px solid rgba(245,201,126,0.3); }
+.section-tag-daily  { background: rgba(110,231,223,0.1);  color: var(--teal);  border: 1px solid rgba(110,231,223,0.25); }
+.section-title {
+  font-family: var(--font-hdr); font-size: 26px; letter-spacing: 1.5px;
+  color: #dde8ff; display: inline;
+}
+.section-meta { font-size: 11px; color: var(--dim); display: flex; gap: 6px; align-items: center; }
+
+/* ── KPI Strip ── */
+.kpi-strip {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  margin-bottom: 12px;
+}
+.kpi {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 13px 15px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.2s;
+}
+.kpi::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--accent, var(--teal));
+  opacity: 0.7;
+}
+.kpi:hover { border-color: var(--border2); }
+.kpi-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); margin-bottom: 5px; }
+.kpi-value { font-family: var(--font-hdr); font-size: 28px; letter-spacing: 1px; color: #e8eeff; line-height: 1; }
+.kpi-sub   { font-size: 9px; color: var(--dim); margin-top: 3px; }
+
+/* ── Grid ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 10px; margin-bottom: 10px;
+}
+.span2 { grid-column: span 2; }
+
+.bottom-grid {
+  display: grid; grid-template-columns: 1fr 210px; gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+}
+.card-title {
+  font-family: var(--font-ui, var(--font-mono));
+  font-size: 10px; font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--dim); margin-bottom: 11px;
+}
+
+/* ── Gauge ── */
+.gauge-card {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-start; grid-row: 1 / 3; padding: 18px 14px;
+}
+.gauge-wrap { position: relative; width: 140px; height: 140px; margin: 6px auto 14px; }
+.gauge-wrap svg { transform: rotate(-90deg); }
+.gauge-bg   { fill: none; stroke: rgba(180,195,230,0.07); stroke-width: 9; }
+.gauge-fill { fill: none; stroke-width: 9; stroke-linecap: round; }
+.gauge-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.gauge-pct { font-family: var(--font-hdr); font-size: 32px; line-height: 1; }
+.gauge-lbl { font-size: 9px; color: var(--dim); letter-spacing: 2px; margin-top: 1px; }
+
+/* ── Tier badges ── */
+.tier-badges { display: flex; flex-direction: column; gap: 7px; width: 100%; }
+.tier-badge {
+  border: 1px solid; border-radius: 7px; padding: 7px 10px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.tier-name  { font-size: 10px; letter-spacing: 1px; font-weight: 600; }
+.tier-count { font-size: 9px; color: var(--dim); }
+.tier-cost  { font-size: 10px; font-weight: 600; }
+
+/* ── Charts ── */
+.chart-wrap      { position: relative; height: 175px; }
+.chart-wrap-tall { position: relative; height: 195px; }
+
+/* ── Table ── */
+.model-table { width: 100%; border-collapse: collapse; }
+.model-table th {
+  font-size: 9px; font-weight: 600; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--dim);
+  text-align: right; padding: 3px 8px 7px;
+  border-bottom: 1px solid var(--border);
+}
+.model-table th:first-child { text-align: left; }
+.model-table td { padding: 6px 8px; border-bottom: 1px solid rgba(180,195,230,0.04); vertical-align: middle; }
+.model-table tr:last-child td { border-bottom: none; }
+.model-table tr:hover td { background: rgba(255,255,255,0.02); }
+td.num { text-align: right; }
+td.dim { color: var(--dim); }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+.model-name { font-size: 11px; vertical-align: middle; }
+.pill { display: inline-block; padding: 2px 6px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+
+/* ── Misc ── */
+.empty { color: var(--dim); padding: 24px; text-align: center; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.kpi { animation: fadeUp 0.4s ease both; }
+.kpi:nth-child(1){animation-delay:0.04s} .kpi:nth-child(2){animation-delay:0.08s}
+.kpi:nth-child(3){animation-delay:0.12s} .kpi:nth-child(4){animation-delay:0.16s}
+.kpi:nth-child(5){animation-delay:0.20s}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <h1>BlockRun</h1>
+      <div class="tagline">Usage Reports</div>
+    </div>
+
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-link global-link" href="#global">
+      <span class="nav-date">All Days</span>
+      <span class="nav-meta">558 req · $9.452</span>
+    </a>
+
+    <div class="nav-section-label">Daily</div>
+    <a class="nav-link" href="#day-2026-02-25"><span class="nav-date">2026-02-25</span><span class="nav-meta">290 req · $2.681</span></a>
+<a class="nav-link" href="#day-2026-02-24"><span class="nav-date">2026-02-24</span><span class="nav-meta">68 req · $1.923</span></a>
+<a class="nav-link" href="#day-2026-02-23"><span class="nav-date">2026-02-23</span><span class="nav-meta">119 req · $2.853</span></a>
+<a class="nav-link" href="#day-2026-02-22"><span class="nav-date">2026-02-22</span><span class="nav-meta">81 req · $1.996</span></a>
+
+
+    <div class="sidebar-footer">
+      4 day(s) ingested<br>
+      Generated 2026-02-25 17:12:08<br>
+      BlockRun Intelligence
+    </div>
+  </nav>
+
+  <!-- ── Main content ── -->
+  <main class="content">
+    
+<section id="global" class="dashboard-section">
+  <div class="section-header">
+    <div>
+      <span class="section-tag section-tag-global">GLOBAL</span>
+      <h2 class="section-title">Aggregated Overview — All Days</h2>
+    </div>
+    <div class="section-meta">
+      <span>558 requests</span>
+      <span>·</span>
+      <span>3 models</span>
+      <span>·</span>
+      <span>$9.4523 actual</span>
+    </div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="kpi-strip">
+    <div class="kpi" style="--accent:#6ee7df;">
+      <div class="kpi-label">Requests</div>
+      <div class="kpi-value">558</div>
+    </div>
+    <div class="kpi" style="--accent:#d4a0c8;">
+      <div class="kpi-label">Actual Cost</div>
+      <div class="kpi-value">$9.4523</div>
+      <div class="kpi-sub">USD this period</div>
+    </div>
+    <div class="kpi" style="--accent:#8899aa;">
+      <div class="kpi-label">Baseline Cost</div>
+      <div class="kpi-value">$176.15</div>
+      <div class="kpi-sub">without routing</div>
+    </div>
+    <div class="kpi" style="--accent:#86efac;">
+      <div class="kpi-label">Real Savings</div>
+      <div class="kpi-value">$166.70</div>
+      <div class="kpi-sub">baseline − actual</div>
+    </div>
+    <div class="kpi" style="--accent:#f5c97e;">
+      <div class="kpi-label">Avg Latency</div>
+      <div class="kpi-value">8887<span style="font-size:14px;"> ms</span></div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="main-grid">
+
+    <!-- Gauge + tiers -->
+    <div class="card gauge-card">
+      <div class="card-title" style="text-align:center;">Savings Rate</div>
+      <div class="gauge-wrap">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle class="gauge-bg"   cx="70" cy="70" r="54"/>
+          <circle class="gauge-fill" cx="70" cy="70" r="54"
+            style="stroke:#6ee7df;stroke-dasharray:321.09 18.21;filter:drop-shadow(0 0 6px #6ee7df)90;"/>
+        </svg>
+        <div class="gauge-center">
+          <div class="gauge-pct" style="color:#6ee7df;text-shadow:0 0 14px #6ee7df66;">95%</div>
+          <div class="gauge-lbl">SAVED</div>
+        </div>
+      </div>
+      <div class="card-title" style="text-align:center;margin-top:4px;">Routing Tiers</div>
+      <div class="tier-badges"><div class="tier-badge" style="border-color:rgba(212,160,200,0.4);background:rgba(212,160,200,0.07);"><span class="tier-name" style="color:#d4a0c8;">DIRECT</span><span class="tier-count">157 req</span><span class="tier-cost" style="color:#d4a0c8;">$2.2136</span></div>
+<div class="tier-badge" style="border-color:rgba(245,201,126,0.4);background:rgba(245,201,126,0.07);"><span class="tier-name" style="color:#f5c97e;">MEDIUM</span><span class="tier-count">240 req</span><span class="tier-cost" style="color:#f5c97e;">$5.0281</span></div>
+<div class="tier-badge" style="border-color:rgba(110,231,223,0.4);background:rgba(110,231,223,0.07);"><span class="tier-name" style="color:#6ee7df;">SIMPLE</span><span class="tier-count">161 req</span><span class="tier-cost" style="color:#6ee7df;">$2.2106</span></div></div>
+    </div>
+
+    <!-- Bar chart -->
+    <div class="card">
+      <div class="card-title">Cost · Baseline · Savings by Model</div>
+      <div class="chart-wrap">
+        <canvas id="global_barChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Donut -->
+    <div class="card">
+      <div class="card-title">Actual Cost Share</div>
+      <div class="chart-wrap">
+        <canvas id="global_donutChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card span2">
+      <div class="card-title">Cost Timeline per Day</div>
+      <div class="chart-wrap">
+        <canvas id="global_tlChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom row -->
+  <div class="bottom-grid">
+    <div class="card">
+      <div class="card-title">Model Breakdown</div>
+      <table class="model-table">
+        <thead>
+          <tr>
+            <th>Model</th><th>Req</th><th>Actual</th>
+            <th>Baseline</th><th>Saved</th><th>Rate</th><th>Avg Lat</th>
+          </tr>
+        </thead>
+        <tbody><tr><td><span class="dot" style="background:#d4a0c8;box-shadow:0 0 6px rgba(212,160,200,0.7);"></span><span class="model-name">grok-code-fast-1</span></td><td class="num">225</td><td class="num">$4.6736</td><td class="num dim">$87.3556</td><td class="num" style="color:#d4a0c8;">$82.6820</td><td class="num"><span class="pill" style="background:rgba(212,160,200,0.12);color:#d4a0c8;border:1px solid rgba(212,160,200,0.3);">94.6%</span></td><td class="num dim">12631 ms</td></tr>
+<tr><td><span class="dot" style="background:#f5c97e;box-shadow:0 0 6px rgba(245,201,126,0.7);"></span><span class="model-name">kimi-k2.5</span></td><td class="num">104</td><td class="num">$2.6777</td><td class="num dim">$38.0047</td><td class="num" style="color:#f5c97e;">$35.3270</td><td class="num"><span class="pill" style="background:rgba(245,201,126,0.12);color:#f5c97e;border:1px solid rgba(245,201,126,0.3);">93.0%</span></td><td class="num dim">9645 ms</td></tr>
+<tr><td><span class="dot" style="background:#6ee7df;box-shadow:0 0 6px rgba(110,231,223,0.7);"></span><span class="model-name">gpt-oss-120b</span></td><td class="num">229</td><td class="num">$2.1010</td><td class="num dim">$50.7874</td><td class="num" style="color:#6ee7df;">$48.6864</td><td class="num"><span class="pill" style="background:rgba(110,231,223,0.12);color:#6ee7df;border:1px solid rgba(110,231,223,0.3);">95.9%</span></td><td class="num dim">4864 ms</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Latency Distribution</div>
+      <div class="chart-wrap-tall">
+        <canvas id="global_latChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<script>
+(function() {
+  const COLORS  = ["#d4a0c8", "#f5c97e", "#6ee7df"];
+  const SOFT    = ["rgba(212,160,200,0.18)", "rgba(245,201,126,0.18)", "rgba(110,231,223,0.18)"];
+  const BCOLORS = ["#d4a0c8", "#f5c97e", "#6ee7df"];
+  const BSOFT   = ["rgba(212,160,200,0.18)", "rgba(245,201,126,0.18)", "rgba(110,231,223,0.18)"];
+  const gridColor = 'rgba(180,190,220,0.07)';
+  const tickColor = '#7a86a8';
+  const legendColor = '#a8b4cc';
+
+  new Chart(document.getElementById('global_donutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ["grok-code-fast-1", "kimi-k2.5", "gpt-oss-120b"],
+      datasets: [{ data: [4.67364, 2.677654, 2.100977], backgroundColor: SOFT, borderColor: COLORS, borderWidth: 1.5, hoverOffset: 5 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.toFixed(6) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('global_barChart'), {
+    type: 'bar',
+    data: {
+      labels: ["grok-code-fast-1", "kimi-k2.5", "gpt-oss-120b"],
+      datasets: [
+        { label: 'Baseline', data: [87.3556, 38.0047, 50.7874], backgroundColor: 'rgba(120,130,160,0.25)', borderColor: 'rgba(120,130,160,0.6)', borderWidth: 1, borderRadius: 4 },
+        { label: 'Actual Cost', data: [4.6736, 2.6777, 2.101], backgroundColor: BSOFT, borderColor: BCOLORS, borderWidth: 1.5, borderRadius: 4 },
+        { label: 'Savings', data: [82.682, 35.327, 48.6864], backgroundColor: 'rgba(110,231,223,0.1)', borderColor: '#6ee7df', borderWidth: 1, borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(4) } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 0 } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => '$' + v.toFixed(1) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('global_tlChart'), {
+    type: 'line',
+    data: { labels: ["02-22", "02-23", "02-24", "02-25"], datasets: [{"label": "grok-code-fast-1", "data": [0.620962, 0.787636, 0.664469, 2.600573], "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "kimi-k2.5", "data": [0.605987, 1.226873, 0.7644, 0.080394], "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "gpt-oss-120b", "data": [0.768738, 0.838525, 0.493714, 0.0], "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 18, maxRotation: 0 } },
+        y: { grid: { color: gridColor }, stacked: true, ticks: { color: tickColor, callback: v => '$' + v.toFixed(4) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('global_latChart'), {
+    type: 'bar',
+    data: {
+      labels: ["0-2s", "2-4s", "4-6s", "6-8s", "8-10s", "10-12s", "12-14s", "14-16s", "16-18s", "18s+"],
+      datasets: [{ label: 'Requests', data: [105, 77, 48, 53, 34, 49, 44, 43, 49, 56], backgroundColor: 'rgba(245,201,126,0.2)', borderColor: '#f5c97e', borderWidth: 1, borderRadius: 3 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 45, font: { size: 9 } } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+      }
+    }
+  });
+})();
+</script>
+
+    
+<section id="day-2026-02-25" class="dashboard-section">
+  <div class="section-header">
+    <div>
+      <span class="section-tag section-tag-daily">DAILY</span>
+      <h2 class="section-title">Daily Report · 2026-02-25</h2>
+    </div>
+    <div class="section-meta">
+      <span>290 requests</span>
+      <span>·</span>
+      <span>3 models</span>
+      <span>·</span>
+      <span>$2.6810 actual</span>
+    </div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="kpi-strip">
+    <div class="kpi" style="--accent:#6ee7df;">
+      <div class="kpi-label">Requests</div>
+      <div class="kpi-value">290</div>
+    </div>
+    <div class="kpi" style="--accent:#d4a0c8;">
+      <div class="kpi-label">Actual Cost</div>
+      <div class="kpi-value">$2.6810</div>
+      <div class="kpi-sub">USD this period</div>
+    </div>
+    <div class="kpi" style="--accent:#8899aa;">
+      <div class="kpi-label">Baseline Cost</div>
+      <div class="kpi-value">$76.06</div>
+      <div class="kpi-sub">without routing</div>
+    </div>
+    <div class="kpi" style="--accent:#86efac;">
+      <div class="kpi-label">Real Savings</div>
+      <div class="kpi-value">$73.38</div>
+      <div class="kpi-sub">baseline − actual</div>
+    </div>
+    <div class="kpi" style="--accent:#f5c97e;">
+      <div class="kpi-label">Avg Latency</div>
+      <div class="kpi-value">7943<span style="font-size:14px;"> ms</span></div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="main-grid">
+
+    <!-- Gauge + tiers -->
+    <div class="card gauge-card">
+      <div class="card-title" style="text-align:center;">Savings Rate</div>
+      <div class="gauge-wrap">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle class="gauge-bg"   cx="70" cy="70" r="54"/>
+          <circle class="gauge-fill" cx="70" cy="70" r="54"
+            style="stroke:#6ee7df;stroke-dasharray:327.34 11.96;filter:drop-shadow(0 0 6px #6ee7df)90;"/>
+        </svg>
+        <div class="gauge-center">
+          <div class="gauge-pct" style="color:#6ee7df;text-shadow:0 0 14px #6ee7df66;">96%</div>
+          <div class="gauge-lbl">SAVED</div>
+        </div>
+      </div>
+      <div class="card-title" style="text-align:center;margin-top:4px;">Routing Tiers</div>
+      <div class="tier-badges"><div class="tier-badge" style="border-color:rgba(212,160,200,0.4);background:rgba(212,160,200,0.07);"><span class="tier-name" style="color:#d4a0c8;">DIRECT</span><span class="tier-count">73 req</span><span class="tier-cost" style="color:#d4a0c8;">$0.0000</span></div>
+<div class="tier-badge" style="border-color:rgba(245,201,126,0.4);background:rgba(245,201,126,0.07);"><span class="tier-name" style="color:#f5c97e;">MEDIUM</span><span class="tier-count">144 req</span><span class="tier-cost" style="color:#f5c97e;">$2.6810</span></div>
+<div class="tier-badge" style="border-color:rgba(110,231,223,0.4);background:rgba(110,231,223,0.07);"><span class="tier-name" style="color:#6ee7df;">SIMPLE</span><span class="tier-count">73 req</span><span class="tier-cost" style="color:#6ee7df;">$0.0000</span></div></div>
+    </div>
+
+    <!-- Bar chart -->
+    <div class="card">
+      <div class="card-title">Cost · Baseline · Savings by Model</div>
+      <div class="chart-wrap">
+        <canvas id="day_2026_02_25_barChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Donut -->
+    <div class="card">
+      <div class="card-title">Actual Cost Share</div>
+      <div class="chart-wrap">
+        <canvas id="day_2026_02_25_donutChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card span2">
+      <div class="card-title">Cost Timeline per Minute</div>
+      <div class="chart-wrap">
+        <canvas id="day_2026_02_25_tlChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom row -->
+  <div class="bottom-grid">
+    <div class="card">
+      <div class="card-title">Model Breakdown</div>
+      <table class="model-table">
+        <thead>
+          <tr>
+            <th>Model</th><th>Req</th><th>Actual</th>
+            <th>Baseline</th><th>Saved</th><th>Rate</th><th>Avg Lat</th>
+          </tr>
+        </thead>
+        <tbody><tr><td><span class="dot" style="background:#6ee7df;box-shadow:0 0 6px rgba(110,231,223,0.7);"></span><span class="model-name">grok-code-fast-1</span></td><td class="num">141</td><td class="num">$2.6006</td><td class="num dim">$56.3513</td><td class="num" style="color:#6ee7df;">$53.7507</td><td class="num"><span class="pill" style="background:rgba(110,231,223,0.12);color:#6ee7df;border:1px solid rgba(110,231,223,0.3);">95.4%</span></td><td class="num dim">14179 ms</td></tr>
+<tr><td><span class="dot" style="background:#f5c97e;box-shadow:0 0 6px rgba(245,201,126,0.7);"></span><span class="model-name">kimi-k2.5</span></td><td class="num">3</td><td class="num">$0.0804</td><td class="num dim">$0.6699</td><td class="num" style="color:#f5c97e;">$0.5896</td><td class="num"><span class="pill" style="background:rgba(245,201,126,0.12);color:#f5c97e;border:1px solid rgba(245,201,126,0.3);">88.0%</span></td><td class="num dim">13784 ms</td></tr>
+<tr><td><span class="dot" style="background:#d4a0c8;box-shadow:0 0 6px rgba(212,160,200,0.7);"></span><span class="model-name">gpt-oss-120b</span></td><td class="num">146</td><td class="num">$0.0000</td><td class="num dim">$19.0362</td><td class="num" style="color:#d4a0c8;">$19.0362</td><td class="num"><span class="pill" style="background:rgba(212,160,200,0.12);color:#d4a0c8;border:1px solid rgba(212,160,200,0.3);">100.0%</span></td><td class="num dim">1801 ms</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Latency Distribution</div>
+      <div class="chart-wrap-tall">
+        <canvas id="day_2026_02_25_latChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<script>
+(function() {
+  const COLORS  = ["#6ee7df", "#f5c97e", "#d4a0c8"];
+  const SOFT    = ["rgba(110,231,223,0.18)", "rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)"];
+  const BCOLORS = ["#6ee7df", "#f5c97e", "#d4a0c8"];
+  const BSOFT   = ["rgba(110,231,223,0.18)", "rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)"];
+  const gridColor = 'rgba(180,190,220,0.07)';
+  const tickColor = '#7a86a8';
+  const legendColor = '#a8b4cc';
+
+  new Chart(document.getElementById('day_2026_02_25_donutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ["grok-code-fast-1", "kimi-k2.5", "gpt-oss-120b"],
+      datasets: [{ data: [2.600573, 0.080394, 0.0], backgroundColor: SOFT, borderColor: COLORS, borderWidth: 1.5, hoverOffset: 5 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.toFixed(6) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('day_2026_02_25_barChart'), {
+    type: 'bar',
+    data: {
+      labels: ["grok-code-fast-1", "kimi-k2.5", "gpt-oss-120b"],
+      datasets: [
+        { label: 'Baseline', data: [56.3513, 0.6699, 19.0362], backgroundColor: 'rgba(120,130,160,0.25)', borderColor: 'rgba(120,130,160,0.6)', borderWidth: 1, borderRadius: 4 },
+        { label: 'Actual Cost', data: [2.6006, 0.0804, 0.0], backgroundColor: BSOFT, borderColor: BCOLORS, borderWidth: 1.5, borderRadius: 4 },
+        { label: 'Savings', data: [53.7507, 0.5896, 19.0362], backgroundColor: 'rgba(110,231,223,0.1)', borderColor: '#6ee7df', borderWidth: 1, borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(4) } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 0 } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => '$' + v.toFixed(1) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('day_2026_02_25_tlChart'), {
+    type: 'line',
+    data: { labels: ["07:41", "07:42", "07:47", "07:48", "07:52", "07:55", "07:56", "07:57", "07:59", "08:02", "08:03", "08:05", "10:41", "11:21", "11:22", "11:23", "11:25", "11:26", "11:27", "11:28", "11:29", "11:45", "11:46", "11:47", "12:58", "13:04", "13:05", "13:06", "13:07", "13:08", "13:12", "13:13", "13:15", "13:16", "13:17", "13:18", "13:23", "13:24", "13:25", "13:27", "13:28", "13:30", "13:37", "13:38", "13:44", "13:48", "13:50", "13:51", "13:52", "13:53", "13:54", "13:55", "14:00", "14:01", "14:02", "14:03", "14:04", "14:09", "14:10", "14:11", "14:12", "14:13", "14:14", "14:15", "14:16", "14:47", "16:51"], datasets: [{"label": "grok-code-fast-1", "data": [0.030707, 0.020692, 0.031461, 0.031827, 0, 0.021597, 0.046689, 0.012226, 0, 0.024765, 0.050213, 0, 0, 0, 0, 0, 0.012565, 0.025312, 0.052214, 0.013452, 0.02712, 0.027602, 0.030139, 0.030342, 0.01537, 0.046538, 0.079486, 0.101075, 0.069249, 0.017576, 0.053569, 0.053519, 0.017714, 0.071331, 0, 0.017982, 0.091658, 0.093396, 0.056428, 0, 0, 0.09823, 0.0793, 0.069444, 0.116571, 0.094386, 0.023721, 0.072075, 0.097661, 0.099432, 0.07569, 0.07627, 0, 0, 0, 0, 0, 0, 0, 0.025513, 0.102396, 0.05144, 0.130231, 0.052999, 0.026842, 0, 0.034557], "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "kimi-k2.5", "data": [0, 0, 0, 0, 0.024818, 0, 0.026003, 0, 0.029573, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "gpt-oss-120b", "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0, 0, 0, 0.0, 0.0, 0, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0.0, 0], "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 18, maxRotation: 0 } },
+        y: { grid: { color: gridColor }, stacked: true, ticks: { color: tickColor, callback: v => '$' + v.toFixed(4) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('day_2026_02_25_latChart'), {
+    type: 'bar',
+    data: {
+      labels: ["0-2s", "2-4s", "4-6s", "6-8s", "8-10s", "10-12s", "12-14s", "14-16s", "16-18s", "18s+"],
+      datasets: [{ label: 'Requests', data: [81, 42, 26, 19, 15, 23, 17, 19, 16, 32], backgroundColor: 'rgba(245,201,126,0.2)', borderColor: '#f5c97e', borderWidth: 1, borderRadius: 3 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 45, font: { size: 9 } } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+      }
+    }
+  });
+})();
+</script>
+
+<section id="day-2026-02-24" class="dashboard-section">
+  <div class="section-header">
+    <div>
+      <span class="section-tag section-tag-daily">DAILY</span>
+      <h2 class="section-title">Daily Report · 2026-02-24</h2>
+    </div>
+    <div class="section-meta">
+      <span>68 requests</span>
+      <span>·</span>
+      <span>3 models</span>
+      <span>·</span>
+      <span>$1.9226 actual</span>
+    </div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="kpi-strip">
+    <div class="kpi" style="--accent:#6ee7df;">
+      <div class="kpi-label">Requests</div>
+      <div class="kpi-value">68</div>
+    </div>
+    <div class="kpi" style="--accent:#d4a0c8;">
+      <div class="kpi-label">Actual Cost</div>
+      <div class="kpi-value">$1.9226</div>
+      <div class="kpi-sub">USD this period</div>
+    </div>
+    <div class="kpi" style="--accent:#8899aa;">
+      <div class="kpi-label">Baseline Cost</div>
+      <div class="kpi-value">$28.58</div>
+      <div class="kpi-sub">without routing</div>
+    </div>
+    <div class="kpi" style="--accent:#86efac;">
+      <div class="kpi-label">Real Savings</div>
+      <div class="kpi-value">$26.65</div>
+      <div class="kpi-sub">baseline − actual</div>
+    </div>
+    <div class="kpi" style="--accent:#f5c97e;">
+      <div class="kpi-label">Avg Latency</div>
+      <div class="kpi-value">10498<span style="font-size:14px;"> ms</span></div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="main-grid">
+
+    <!-- Gauge + tiers -->
+    <div class="card gauge-card">
+      <div class="card-title" style="text-align:center;">Savings Rate</div>
+      <div class="gauge-wrap">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle class="gauge-bg"   cx="70" cy="70" r="54"/>
+          <circle class="gauge-fill" cx="70" cy="70" r="54"
+            style="stroke:#6ee7df;stroke-dasharray:316.47 22.83;filter:drop-shadow(0 0 6px #6ee7df)90;"/>
+        </svg>
+        <div class="gauge-center">
+          <div class="gauge-pct" style="color:#6ee7df;text-shadow:0 0 14px #6ee7df66;">93%</div>
+          <div class="gauge-lbl">SAVED</div>
+        </div>
+      </div>
+      <div class="card-title" style="text-align:center;margin-top:4px;">Routing Tiers</div>
+      <div class="tier-badges"><div class="tier-badge" style="border-color:rgba(212,160,200,0.4);background:rgba(212,160,200,0.07);"><span class="tier-name" style="color:#d4a0c8;">DIRECT</span><span class="tier-count">22 req</span><span class="tier-cost" style="color:#d4a0c8;">$0.5967</span></div>
+<div class="tier-badge" style="border-color:rgba(245,201,126,0.4);background:rgba(245,201,126,0.07);"><span class="tier-name" style="color:#f5c97e;">MEDIUM</span><span class="tier-count">21 req</span><span class="tier-cost" style="color:#f5c97e;">$0.5310</span></div>
+<div class="tier-badge" style="border-color:rgba(110,231,223,0.4);background:rgba(110,231,223,0.07);"><span class="tier-name" style="color:#6ee7df;">SIMPLE</span><span class="tier-count">25 req</span><span class="tier-cost" style="color:#6ee7df;">$0.7949</span></div></div>
+    </div>
+
+    <!-- Bar chart -->
+    <div class="card">
+      <div class="card-title">Cost · Baseline · Savings by Model</div>
+      <div class="chart-wrap">
+        <canvas id="day_2026_02_24_barChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Donut -->
+    <div class="card">
+      <div class="card-title">Actual Cost Share</div>
+      <div class="chart-wrap">
+        <canvas id="day_2026_02_24_donutChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card span2">
+      <div class="card-title">Cost Timeline per Minute</div>
+      <div class="chart-wrap">
+        <canvas id="day_2026_02_24_tlChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom row -->
+  <div class="bottom-grid">
+    <div class="card">
+      <div class="card-title">Model Breakdown</div>
+      <table class="model-table">
+        <thead>
+          <tr>
+            <th>Model</th><th>Req</th><th>Actual</th>
+            <th>Baseline</th><th>Saved</th><th>Rate</th><th>Avg Lat</th>
+          </tr>
+        </thead>
+        <tbody><tr><td><span class="dot" style="background:#6ee7df;box-shadow:0 0 6px rgba(110,231,223,0.7);"></span><span class="model-name">kimi-k2.5</span></td><td class="num">26</td><td class="num">$0.7644</td><td class="num dim">$11.0798</td><td class="num" style="color:#6ee7df;">$10.3154</td><td class="num"><span class="pill" style="background:rgba(110,231,223,0.12);color:#6ee7df;border:1px solid rgba(110,231,223,0.3);">93.1%</span></td><td class="num dim">9938 ms</td></tr>
+<tr><td><span class="dot" style="background:#f5c97e;box-shadow:0 0 6px rgba(245,201,126,0.7);"></span><span class="model-name">grok-code-fast-1</span></td><td class="num">23</td><td class="num">$0.6645</td><td class="num dim">$10.3227</td><td class="num" style="color:#f5c97e;">$9.6583</td><td class="num"><span class="pill" style="background:rgba(245,201,126,0.12);color:#f5c97e;border:1px solid rgba(245,201,126,0.3);">93.6%</span></td><td class="num dim">11297 ms</td></tr>
+<tr><td><span class="dot" style="background:#d4a0c8;box-shadow:0 0 6px rgba(212,160,200,0.7);"></span><span class="model-name">gpt-oss-120b</span></td><td class="num">19</td><td class="num">$0.4937</td><td class="num dim">$7.1725</td><td class="num" style="color:#d4a0c8;">$6.6788</td><td class="num"><span class="pill" style="background:rgba(212,160,200,0.12);color:#d4a0c8;border:1px solid rgba(212,160,200,0.3);">93.1%</span></td><td class="num dim">10300 ms</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Latency Distribution</div>
+      <div class="chart-wrap-tall">
+        <canvas id="day_2026_02_24_latChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<script>
+(function() {
+  const COLORS  = ["#6ee7df", "#f5c97e", "#d4a0c8"];
+  const SOFT    = ["rgba(110,231,223,0.18)", "rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)"];
+  const BCOLORS = ["#6ee7df", "#f5c97e", "#d4a0c8"];
+  const BSOFT   = ["rgba(110,231,223,0.18)", "rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)"];
+  const gridColor = 'rgba(180,190,220,0.07)';
+  const tickColor = '#7a86a8';
+  const legendColor = '#a8b4cc';
+
+  new Chart(document.getElementById('day_2026_02_24_donutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ["kimi-k2.5", "grok-code-fast-1", "gpt-oss-120b"],
+      datasets: [{ data: [0.7644, 0.664469, 0.493714], backgroundColor: SOFT, borderColor: COLORS, borderWidth: 1.5, hoverOffset: 5 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.toFixed(6) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('day_2026_02_24_barChart'), {
+    type: 'bar',
+    data: {
+      labels: ["kimi-k2.5", "grok-code-fast-1", "gpt-oss-120b"],
+      datasets: [
+        { label: 'Baseline', data: [11.0798, 10.3227, 7.1725], backgroundColor: 'rgba(120,130,160,0.25)', borderColor: 'rgba(120,130,160,0.6)', borderWidth: 1, borderRadius: 4 },
+        { label: 'Actual Cost', data: [0.7644, 0.6645, 0.4937], backgroundColor: BSOFT, borderColor: BCOLORS, borderWidth: 1.5, borderRadius: 4 },
+        { label: 'Savings', data: [10.3154, 9.6583, 6.6788], backgroundColor: 'rgba(110,231,223,0.1)', borderColor: '#6ee7df', borderWidth: 1, borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(4) } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 0 } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => '$' + v.toFixed(1) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('day_2026_02_24_tlChart'), {
+    type: 'line',
+    data: { labels: ["07:10", "07:19", "07:22", "07:26", "07:53", "08:18", "08:34", "08:35", "08:40", "09:00", "09:14", "10:01", "10:03", "10:20", "10:37", "10:57", "11:01", "11:13", "11:14", "11:34", "11:48", "12:40", "12:42", "12:44", "12:49", "12:52", "13:10", "13:25", "13:28", "13:35", "14:03", "14:07", "14:22", "14:27", "14:32", "14:39", "15:09", "16:01", "16:03", "16:18", "16:21", "16:23", "16:34", "16:56", "17:05", "17:06", "17:21", "17:22", "17:48", "17:54", "18:01", "18:11", "18:12", "18:15", "18:59", "19:36", "20:22", "20:40", "20:41", "21:26", "21:31", "22:10", "22:27", "22:30", "22:37", "22:45"], datasets: [{"label": "kimi-k2.5", "data": [0.00015, 0, 0.04976, 0, 0.023465, 0, 0, 0, 0, 0, 0.042774, 0, 0.038476, 0, 0.03414, 0, 0.00491, 0.024847, 0, 0, 0, 0.019255, 0.041465, 0, 0, 0, 0, 0.046652, 0.010605, 0.037105, 0, 0, 0, 0, 0.03753, 0, 0.025028, 0, 0, 0.03636, 0, 0.012745, 0, 0.025852, 0.035883, 0, 0, 0.042599, 0, 0, 0, 0.034864, 0, 0.045948, 0, 0, 0, 0, 0.00231, 0.031043, 0.047084, 0.013549, 0, 0, 0, 0], "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "grok-code-fast-1", "data": [0, 0.025337, 0, 0, 0, 0, 0.030528, 0.037129, 0.015765, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.039955, 0.019095, 0, 0, 0, 0.032202, 0, 0.035162, 0.049202, 0, 0, 0, 0, 0, 0.023166, 0, 0, 0, 0, 0, 0.03614, 0, 0, 0, 0.039489, 0, 0.041005, 0, 0.011578, 0, 0.037706, 0, 0, 0, 0, 0, 0.027894, 0.024689, 0.036627, 0.003935, 0, 0, 0, 0, 0.027693, 0.04258, 0, 0.027592], "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "gpt-oss-120b", "data": [0, 0, 0, 0.049304, 0, 0.008763, 0, 0, 0, 0.02127, 0, 0.031574, 0, 0.031715, 0, 0.005198, 0, 0, 0, 0, 0.017453, 0, 0, 0, 0.021441, 0, 0, 0, 0, 0, 0.048795, 0.024466, 0, 0.019771, 0, 0.027518, 0, 0.017759, 0, 0, 0.005163, 0, 0, 0, 0, 0.030577, 0, 0, 0, 0.036236, 0.039166, 0, 0.014333, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.043211, 0], "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 18, maxRotation: 0 } },
+        y: { grid: { color: gridColor }, stacked: true, ticks: { color: tickColor, callback: v => '$' + v.toFixed(4) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('day_2026_02_24_latChart'), {
+    type: 'bar',
+    data: {
+      labels: ["0-2s", "2-4s", "4-6s", "6-8s", "8-10s", "10-12s", "12-14s", "14-16s", "16-18s", "18s+"],
+      datasets: [{ label: 'Requests', data: [6, 7, 7, 7, 2, 7, 10, 5, 10, 7], backgroundColor: 'rgba(245,201,126,0.2)', borderColor: '#f5c97e', borderWidth: 1, borderRadius: 3 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 45, font: { size: 9 } } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+      }
+    }
+  });
+})();
+</script>
+
+<section id="day-2026-02-23" class="dashboard-section">
+  <div class="section-header">
+    <div>
+      <span class="section-tag section-tag-daily">DAILY</span>
+      <h2 class="section-title">Daily Report · 2026-02-23</h2>
+    </div>
+    <div class="section-meta">
+      <span>119 requests</span>
+      <span>·</span>
+      <span>3 models</span>
+      <span>·</span>
+      <span>$2.8530 actual</span>
+    </div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="kpi-strip">
+    <div class="kpi" style="--accent:#6ee7df;">
+      <div class="kpi-label">Requests</div>
+      <div class="kpi-value">119</div>
+    </div>
+    <div class="kpi" style="--accent:#d4a0c8;">
+      <div class="kpi-label">Actual Cost</div>
+      <div class="kpi-value">$2.8530</div>
+      <div class="kpi-sub">USD this period</div>
+    </div>
+    <div class="kpi" style="--accent:#8899aa;">
+      <div class="kpi-label">Baseline Cost</div>
+      <div class="kpi-value">$41.56</div>
+      <div class="kpi-sub">without routing</div>
+    </div>
+    <div class="kpi" style="--accent:#86efac;">
+      <div class="kpi-label">Real Savings</div>
+      <div class="kpi-value">$38.70</div>
+      <div class="kpi-sub">baseline − actual</div>
+    </div>
+    <div class="kpi" style="--accent:#f5c97e;">
+      <div class="kpi-label">Avg Latency</div>
+      <div class="kpi-value">9655<span style="font-size:14px;"> ms</span></div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="main-grid">
+
+    <!-- Gauge + tiers -->
+    <div class="card gauge-card">
+      <div class="card-title" style="text-align:center;">Savings Rate</div>
+      <div class="gauge-wrap">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle class="gauge-bg"   cx="70" cy="70" r="54"/>
+          <circle class="gauge-fill" cx="70" cy="70" r="54"
+            style="stroke:#6ee7df;stroke-dasharray:316.01 23.29;filter:drop-shadow(0 0 6px #6ee7df)90;"/>
+        </svg>
+        <div class="gauge-center">
+          <div class="gauge-pct" style="color:#6ee7df;text-shadow:0 0 14px #6ee7df66;">93%</div>
+          <div class="gauge-lbl">SAVED</div>
+        </div>
+      </div>
+      <div class="card-title" style="text-align:center;margin-top:4px;">Routing Tiers</div>
+      <div class="tier-badges"><div class="tier-badge" style="border-color:rgba(212,160,200,0.4);background:rgba(212,160,200,0.07);"><span class="tier-name" style="color:#d4a0c8;">DIRECT</span><span class="tier-count">37 req</span><span class="tier-cost" style="color:#d4a0c8;">$0.9222</span></div>
+<div class="tier-badge" style="border-color:rgba(245,201,126,0.4);background:rgba(245,201,126,0.07);"><span class="tier-name" style="color:#f5c97e;">MEDIUM</span><span class="tier-count">44 req</span><span class="tier-cost" style="color:#f5c97e;">$1.0245</span></div>
+<div class="tier-badge" style="border-color:rgba(110,231,223,0.4);background:rgba(110,231,223,0.07);"><span class="tier-name" style="color:#6ee7df;">SIMPLE</span><span class="tier-count">38 req</span><span class="tier-cost" style="color:#6ee7df;">$0.9064</span></div></div>
+    </div>
+
+    <!-- Bar chart -->
+    <div class="card">
+      <div class="card-title">Cost · Baseline · Savings by Model</div>
+      <div class="chart-wrap">
+        <canvas id="day_2026_02_23_barChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Donut -->
+    <div class="card">
+      <div class="card-title">Actual Cost Share</div>
+      <div class="chart-wrap">
+        <canvas id="day_2026_02_23_donutChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card span2">
+      <div class="card-title">Cost Timeline per Minute</div>
+      <div class="chart-wrap">
+        <canvas id="day_2026_02_23_tlChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom row -->
+  <div class="bottom-grid">
+    <div class="card">
+      <div class="card-title">Model Breakdown</div>
+      <table class="model-table">
+        <thead>
+          <tr>
+            <th>Model</th><th>Req</th><th>Actual</th>
+            <th>Baseline</th><th>Saved</th><th>Rate</th><th>Avg Lat</th>
+          </tr>
+        </thead>
+        <tbody><tr><td><span class="dot" style="background:#f5c97e;box-shadow:0 0 6px rgba(245,201,126,0.7);"></span><span class="model-name">kimi-k2.5</span></td><td class="num">51</td><td class="num">$1.2269</td><td class="num dim">$17.6833</td><td class="num" style="color:#f5c97e;">$16.4564</td><td class="num"><span class="pill" style="background:rgba(245,201,126,0.12);color:#f5c97e;border:1px solid rgba(245,201,126,0.3);">93.1%</span></td><td class="num dim">9908 ms</td></tr>
+<tr><td><span class="dot" style="background:#d4a0c8;box-shadow:0 0 6px rgba(212,160,200,0.7);"></span><span class="model-name">gpt-oss-120b</span></td><td class="num">33</td><td class="num">$0.8385</td><td class="num dim">$12.7023</td><td class="num" style="color:#d4a0c8;">$11.8638</td><td class="num"><span class="pill" style="background:rgba(212,160,200,0.12);color:#d4a0c8;border:1px solid rgba(212,160,200,0.3);">93.4%</span></td><td class="num dim">10298 ms</td></tr>
+<tr><td><span class="dot" style="background:#6ee7df;box-shadow:0 0 6px rgba(110,231,223,0.7);"></span><span class="model-name">grok-code-fast-1</span></td><td class="num">35</td><td class="num">$0.7876</td><td class="num dim">$11.1723</td><td class="num" style="color:#6ee7df;">$10.3847</td><td class="num"><span class="pill" style="background:rgba(110,231,223,0.12);color:#6ee7df;border:1px solid rgba(110,231,223,0.3);">93.0%</span></td><td class="num dim">8680 ms</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Latency Distribution</div>
+      <div class="chart-wrap-tall">
+        <canvas id="day_2026_02_23_latChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<script>
+(function() {
+  const COLORS  = ["#f5c97e", "#d4a0c8", "#6ee7df"];
+  const SOFT    = ["rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)", "rgba(110,231,223,0.18)"];
+  const BCOLORS = ["#f5c97e", "#d4a0c8", "#6ee7df"];
+  const BSOFT   = ["rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)", "rgba(110,231,223,0.18)"];
+  const gridColor = 'rgba(180,190,220,0.07)';
+  const tickColor = '#7a86a8';
+  const legendColor = '#a8b4cc';
+
+  new Chart(document.getElementById('day_2026_02_23_donutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ["kimi-k2.5", "gpt-oss-120b", "grok-code-fast-1"],
+      datasets: [{ data: [1.226873, 0.838525, 0.787636], backgroundColor: SOFT, borderColor: COLORS, borderWidth: 1.5, hoverOffset: 5 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.toFixed(6) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('day_2026_02_23_barChart'), {
+    type: 'bar',
+    data: {
+      labels: ["kimi-k2.5", "gpt-oss-120b", "grok-code-fast-1"],
+      datasets: [
+        { label: 'Baseline', data: [17.6833, 12.7023, 11.1723], backgroundColor: 'rgba(120,130,160,0.25)', borderColor: 'rgba(120,130,160,0.6)', borderWidth: 1, borderRadius: 4 },
+        { label: 'Actual Cost', data: [1.2269, 0.8385, 0.7876], backgroundColor: BSOFT, borderColor: BCOLORS, borderWidth: 1.5, borderRadius: 4 },
+        { label: 'Savings', data: [16.4564, 11.8638, 10.3847], backgroundColor: 'rgba(110,231,223,0.1)', borderColor: '#6ee7df', borderWidth: 1, borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(4) } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 0 } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => '$' + v.toFixed(1) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('day_2026_02_23_tlChart'), {
+    type: 'line',
+    data: { labels: ["07:01", "07:05", "07:06", "07:15", "07:33", "07:40", "07:56", "08:09", "08:12", "08:29", "08:30", "08:42", "09:08", "09:16", "09:17", "09:22", "09:23", "09:32", "09:37", "09:41", "10:07", "10:25", "10:27", "10:32", "10:37", "10:43", "10:47", "11:16", "11:22", "11:30", "11:36", "11:48", "11:49", "11:51", "12:05", "12:13", "12:19", "12:20", "12:26", "12:27", "12:30", "12:31", "12:34", "12:44", "12:47", "12:51", "13:12", "13:13", "13:26", "13:29", "13:30", "13:32", "13:38", "13:42", "13:51", "14:09", "14:11", "14:20", "14:25", "14:33", "14:36", "14:38", "14:40", "14:51", "15:00", "15:12", "15:40", "15:42", "15:43", "15:44", "16:19", "16:29", "16:30", "16:36", "16:37", "16:52", "17:01", "17:03", "17:11", "17:12", "17:22", "17:43", "17:48", "17:50", "17:59", "18:00", "18:13", "18:20", "18:32", "18:57", "19:18", "19:21", "19:28", "19:42", "19:46", "19:52", "19:56", "20:21", "20:33", "20:57", "21:15", "21:21", "21:22", "21:31", "21:35", "21:39", "21:46", "21:51", "22:33", "22:35", "22:36", "22:39", "22:43", "22:57"], datasets: [{"label": "kimi-k2.5", "data": [0.026398, 0, 0, 0.039377, 0.048871, 0, 0.027322, 0, 0, 0, 0, 0.029294, 0.022293, 0.017407, 0, 0.044629, 0.031185, 0.039811, 0.01596, 0.024849, 0.01038, 0.017339, 0, 0.006244, 0, 0, 0, 0.035342, 0, 0.025813, 0, 0.007002, 0.000623, 0, 0, 0, 0, 0, 0, 0, 0, 0.044892, 0, 0, 0, 0, 0, 0.045863, 0.010689, 0, 0, 0.045404, 0.030951, 0.042009, 0, 0.007892, 0, 0, 0.009239, 0, 0.025643, 0.023794, 0, 0.030353, 0.047719, 0, 0, 0, 0.01798, 0, 0.028319, 0, 0, 0, 0, 0.009158, 0, 0, 0.028016, 0, 0.017219, 0, 0, 0, 0.001358, 0.0004, 0, 0.048738, 0.035612, 0, 0, 0, 0.031195, 0.010914, 0, 0.035637, 0.030059, 0, 0.019898, 0.011184, 0, 0, 0, 0, 0.025448, 0, 0, 0.029404, 0.011748, 0, 0, 0, 0, 0], "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "gpt-oss-120b", "data": [0, 0.009932, 0, 0, 0, 0.032605, 0, 0, 0.020178, 0.047921, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.002841, 0, 0.021279, 0.034764, 0.007881, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.037484, 0, 0, 0.039086, 0.00861, 0, 0, 0, 0, 0, 0, 0.002961, 0, 0, 0, 0.036305, 0, 0.00283, 0.006355, 0, 0.060959, 0, 0, 0, 0, 0, 0, 0, 0.012015, 0, 0, 0, 0, 0.037462, 0.017893, 0.032647, 0, 0.024028, 0, 0, 0.020719, 0, 0.009386, 0, 0.038864, 0, 0, 0, 0, 0, 0, 0, 0.039641, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.039732, 0.012552, 0, 0, 0.048197, 0, 0, 0, 0, 0.043252, 0, 0.040911, 0.049235], "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "grok-code-fast-1", "data": [0, 0, 0.046887, 0, 0, 0, 0, 0.01912, 0, 0, 0.006174, 0.01189, 0, 0, 0.044388, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.010089, 0, 0.019053, 0, 0, 0.024202, 0.010469, 0.042495, 0.020543, 0.009256, 0.013789, 0, 0.007125, 0, 0, 0, 0.002504, 0.031733, 0.019589, 0, 0, 0.042321, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01392, 0, 0, 0.004617, 0.037524, 0, 0, 0.015695, 0, 0.000719, 0, 0, 0, 0, 0, 0.048708, 0, 0, 0, 0, 0.02117, 0, 0, 0, 0.004887, 0, 0, 0.00509, 0.031679, 0, 0, 0, 0.042499, 0, 0, 0.04483, 0, 0, 0.030091, 0, 0, 0.031375, 0, 0, 0.030358, 0, 0, 0.037561, 0, 0.005289, 0, 0], "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 18, maxRotation: 0 } },
+        y: { grid: { color: gridColor }, stacked: true, ticks: { color: tickColor, callback: v => '$' + v.toFixed(4) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('day_2026_02_23_latChart'), {
+    type: 'bar',
+    data: {
+      labels: ["0-2s", "2-4s", "4-6s", "6-8s", "8-10s", "10-12s", "12-14s", "14-16s", "16-18s", "18s+"],
+      datasets: [{ label: 'Requests', data: [8, 18, 9, 14, 16, 11, 11, 10, 13, 9], backgroundColor: 'rgba(245,201,126,0.2)', borderColor: '#f5c97e', borderWidth: 1, borderRadius: 3 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 45, font: { size: 9 } } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+      }
+    }
+  });
+})();
+</script>
+
+<section id="day-2026-02-22" class="dashboard-section">
+  <div class="section-header">
+    <div>
+      <span class="section-tag section-tag-daily">DAILY</span>
+      <h2 class="section-title">Daily Report · 2026-02-22</h2>
+    </div>
+    <div class="section-meta">
+      <span>81 requests</span>
+      <span>·</span>
+      <span>3 models</span>
+      <span>·</span>
+      <span>$1.9957 actual</span>
+    </div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="kpi-strip">
+    <div class="kpi" style="--accent:#6ee7df;">
+      <div class="kpi-label">Requests</div>
+      <div class="kpi-value">81</div>
+    </div>
+    <div class="kpi" style="--accent:#d4a0c8;">
+      <div class="kpi-label">Actual Cost</div>
+      <div class="kpi-value">$1.9957</div>
+      <div class="kpi-sub">USD this period</div>
+    </div>
+    <div class="kpi" style="--accent:#8899aa;">
+      <div class="kpi-label">Baseline Cost</div>
+      <div class="kpi-value">$29.96</div>
+      <div class="kpi-sub">without routing</div>
+    </div>
+    <div class="kpi" style="--accent:#86efac;">
+      <div class="kpi-label">Real Savings</div>
+      <div class="kpi-value">$27.96</div>
+      <div class="kpi-sub">baseline − actual</div>
+    </div>
+    <div class="kpi" style="--accent:#f5c97e;">
+      <div class="kpi-label">Avg Latency</div>
+      <div class="kpi-value">9784<span style="font-size:14px;"> ms</span></div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="main-grid">
+
+    <!-- Gauge + tiers -->
+    <div class="card gauge-card">
+      <div class="card-title" style="text-align:center;">Savings Rate</div>
+      <div class="gauge-wrap">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle class="gauge-bg"   cx="70" cy="70" r="54"/>
+          <circle class="gauge-fill" cx="70" cy="70" r="54"
+            style="stroke:#6ee7df;stroke-dasharray:316.7 22.6;filter:drop-shadow(0 0 6px #6ee7df)90;"/>
+        </svg>
+        <div class="gauge-center">
+          <div class="gauge-pct" style="color:#6ee7df;text-shadow:0 0 14px #6ee7df66;">93%</div>
+          <div class="gauge-lbl">SAVED</div>
+        </div>
+      </div>
+      <div class="card-title" style="text-align:center;margin-top:4px;">Routing Tiers</div>
+      <div class="tier-badges"><div class="tier-badge" style="border-color:rgba(212,160,200,0.4);background:rgba(212,160,200,0.07);"><span class="tier-name" style="color:#d4a0c8;">DIRECT</span><span class="tier-count">25 req</span><span class="tier-cost" style="color:#d4a0c8;">$0.6947</span></div>
+<div class="tier-badge" style="border-color:rgba(245,201,126,0.4);background:rgba(245,201,126,0.07);"><span class="tier-name" style="color:#f5c97e;">MEDIUM</span><span class="tier-count">31 req</span><span class="tier-cost" style="color:#f5c97e;">$0.7917</span></div>
+<div class="tier-badge" style="border-color:rgba(110,231,223,0.4);background:rgba(110,231,223,0.07);"><span class="tier-name" style="color:#6ee7df;">SIMPLE</span><span class="tier-count">25 req</span><span class="tier-cost" style="color:#6ee7df;">$0.5093</span></div></div>
+    </div>
+
+    <!-- Bar chart -->
+    <div class="card">
+      <div class="card-title">Cost · Baseline · Savings by Model</div>
+      <div class="chart-wrap">
+        <canvas id="day_2026_02_22_barChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Donut -->
+    <div class="card">
+      <div class="card-title">Actual Cost Share</div>
+      <div class="chart-wrap">
+        <canvas id="day_2026_02_22_donutChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card span2">
+      <div class="card-title">Cost Timeline per Minute</div>
+      <div class="chart-wrap">
+        <canvas id="day_2026_02_22_tlChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom row -->
+  <div class="bottom-grid">
+    <div class="card">
+      <div class="card-title">Model Breakdown</div>
+      <table class="model-table">
+        <thead>
+          <tr>
+            <th>Model</th><th>Req</th><th>Actual</th>
+            <th>Baseline</th><th>Saved</th><th>Rate</th><th>Avg Lat</th>
+          </tr>
+        </thead>
+        <tbody><tr><td><span class="dot" style="background:#6ee7df;box-shadow:0 0 6px rgba(110,231,223,0.7);"></span><span class="model-name">gpt-oss-120b</span></td><td class="num">31</td><td class="num">$0.7687</td><td class="num dim">$11.8764</td><td class="num" style="color:#6ee7df;">$11.1076</td><td class="num"><span class="pill" style="background:rgba(110,231,223,0.12);color:#6ee7df;border:1px solid rgba(110,231,223,0.3);">93.5%</span></td><td class="num dim">10176 ms</td></tr>
+<tr><td><span class="dot" style="background:#d4a0c8;box-shadow:0 0 6px rgba(212,160,200,0.7);"></span><span class="model-name">grok-code-fast-1</span></td><td class="num">26</td><td class="num">$0.6210</td><td class="num dim">$9.5093</td><td class="num" style="color:#d4a0c8;">$8.8883</td><td class="num"><span class="pill" style="background:rgba(212,160,200,0.12);color:#d4a0c8;border:1px solid rgba(212,160,200,0.3);">93.5%</span></td><td class="num dim">10730 ms</td></tr>
+<tr><td><span class="dot" style="background:#f5c97e;box-shadow:0 0 6px rgba(245,201,126,0.7);"></span><span class="model-name">kimi-k2.5</span></td><td class="num">24</td><td class="num">$0.6060</td><td class="num dim">$8.5716</td><td class="num" style="color:#f5c97e;">$7.9656</td><td class="num"><span class="pill" style="background:rgba(245,201,126,0.12);color:#f5c97e;border:1px solid rgba(245,201,126,0.3);">92.9%</span></td><td class="num dim">8252 ms</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Latency Distribution</div>
+      <div class="chart-wrap-tall">
+        <canvas id="day_2026_02_22_latChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<script>
+(function() {
+  const COLORS  = ["#6ee7df", "#d4a0c8", "#f5c97e"];
+  const SOFT    = ["rgba(110,231,223,0.18)", "rgba(212,160,200,0.18)", "rgba(245,201,126,0.18)"];
+  const BCOLORS = ["#6ee7df", "#d4a0c8", "#f5c97e"];
+  const BSOFT   = ["rgba(110,231,223,0.18)", "rgba(212,160,200,0.18)", "rgba(245,201,126,0.18)"];
+  const gridColor = 'rgba(180,190,220,0.07)';
+  const tickColor = '#7a86a8';
+  const legendColor = '#a8b4cc';
+
+  new Chart(document.getElementById('day_2026_02_22_donutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ["gpt-oss-120b", "grok-code-fast-1", "kimi-k2.5"],
+      datasets: [{ data: [0.768738, 0.620962, 0.605987], backgroundColor: SOFT, borderColor: COLORS, borderWidth: 1.5, hoverOffset: 5 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.toFixed(6) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('day_2026_02_22_barChart'), {
+    type: 'bar',
+    data: {
+      labels: ["gpt-oss-120b", "grok-code-fast-1", "kimi-k2.5"],
+      datasets: [
+        { label: 'Baseline', data: [11.8764, 9.5093, 8.5716], backgroundColor: 'rgba(120,130,160,0.25)', borderColor: 'rgba(120,130,160,0.6)', borderWidth: 1, borderRadius: 4 },
+        { label: 'Actual Cost', data: [0.7687, 0.621, 0.606], backgroundColor: BSOFT, borderColor: BCOLORS, borderWidth: 1.5, borderRadius: 4 },
+        { label: 'Savings', data: [11.1076, 8.8883, 7.9656], backgroundColor: 'rgba(110,231,223,0.1)', borderColor: '#6ee7df', borderWidth: 1, borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(4) } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 0 } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => '$' + v.toFixed(1) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('day_2026_02_22_tlChart'), {
+    type: 'line',
+    data: { labels: ["07:12", "07:14", "07:31", "07:32", "07:53", "08:13", "08:26", "08:35", "08:43", "08:45", "08:49", "08:57", "09:01", "09:17", "09:22", "09:37", "09:43", "09:45", "09:46", "10:21", "10:29", "10:38", "11:09", "11:10", "11:20", "11:37", "11:57", "12:00", "12:07", "12:11", "12:44", "13:18", "13:28", "13:35", "13:47", "14:11", "14:52", "15:03", "15:11", "15:14", "15:19", "15:30", "16:03", "16:07", "16:13", "16:19", "16:29", "16:35", "16:42", "16:52", "17:52", "18:11", "18:36", "18:39", "18:40", "19:06", "19:31", "19:40", "19:59", "20:03", "20:06", "20:20", "20:26", "20:28", "20:50", "20:56", "21:10", "21:23", "21:30", "21:59", "22:20", "22:28", "22:44"], datasets: [{"label": "gpt-oss-120b", "data": [0.014281, 0, 0, 0, 0, 0.034218, 0, 0, 0, 0.032665, 0.027291, 0, 0.009437, 0.0479, 0, 0, 0, 0.015127, 0.041058, 0, 0.035868, 0, 0, 0, 0, 0.033833, 0, 0.035114, 0.030044, 0, 0.026906, 0, 0, 0.009869, 0.000367, 0, 0.019739, 0, 0, 0, 0.031542, 0.021164, 0, 0, 0, 0.03158, 0, 0.027728, 0, 0, 0, 0, 0, 0, 0, 0.005247, 0.018035, 0.014988, 0, 0, 0, 0.04517, 0.02443, 0.053144, 0, 0.017584, 0, 0.025011, 0, 0.039396, 0, 0, 0], "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "grok-code-fast-1", "data": [0.043478, 0.021478, 0.019917, 0.010226, 0.001483, 0, 0.033259, 0.028198, 0, 0, 0, 0.011728, 0, 0, 0, 0, 0.042654, 0, 0, 0.002154, 0, 0.033491, 0, 0, 0, 0, 0, 0, 0, 0.008741, 0, 0, 0.037343, 0, 0, 0.012427, 0, 0, 0.009063, 0, 0, 0, 0, 0.017462, 0, 0, 0.009104, 0, 0.045136, 0, 0.031419, 0.044824, 0, 0, 0, 0, 0, 0, 0.03504, 0, 0.014767, 0, 0, 0, 0, 0, 0, 0, 0.011415, 0.036608, 0.037275, 0.022272, 0], "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "kimi-k2.5", "data": [0, 0, 0, 0, 0, 0, 0, 0, 0.046582, 0, 0, 0, 0, 0, 0.007768, 0.027195, 0, 0, 0, 0, 0, 0, 0.023697, 0.002298, 0.041402, 0, 0.06879, 0, 0, 0, 0, 0.0265, 0, 0, 0, 0, 0, 0.023828, 0, 0.007451, 0, 0, 0.00131, 0, 0.029061, 0, 0, 0.026366, 0, 0.014315, 0, 0, 0.038762, 0.046472, 0.009112, 0, 0, 0, 0, 0.015527, 0.027936, 0, 0, 0, 0.018552, 0, 0.040348, 0, 0, 0, 0, 0, 0.062715], "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 18, maxRotation: 0 } },
+        y: { grid: { color: gridColor }, stacked: true, ticks: { color: tickColor, callback: v => '$' + v.toFixed(4) } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('day_2026_02_22_latChart'), {
+    type: 'bar',
+    data: {
+      labels: ["0-2s", "2-4s", "4-6s", "6-8s", "8-10s", "10-12s", "12-14s", "14-16s", "16-18s", "18s+"],
+      datasets: [{ label: 'Requests', data: [10, 10, 6, 13, 1, 8, 6, 9, 10, 8], backgroundColor: 'rgba(245,201,126,0.2)', borderColor: '#f5c97e', borderWidth: 1, borderRadius: 3 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 45, font: { size: 9 } } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+      }
+    }
+  });
+})();
+</script>
+
+  </main>
+
+</div>
+
+<script>
+// Highlight active nav link on scroll
+const sections = document.querySelectorAll('.dashboard-section');
+const links    = document.querySelectorAll('.nav-link');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const a = document.querySelector('.nav-link[href="#' + e.target.id + '"]');
+      if (a) a.classList.add('active');
+    }
+  });
+}, { threshold: 0.25 });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
