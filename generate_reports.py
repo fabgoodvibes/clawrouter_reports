@@ -24,21 +24,34 @@ import glob
 from collections import defaultdict
 from datetime import datetime
 
-# ─── Pastel-cyber palette ────────────────────────────────────────────────────
-#  Deep slate backgrounds, low-saturation tinted accents — still sharp & techy
-#  but easy on the eyes.
+# ─── Palettes ─────────────────────────────────────────────────────────────────
 
+# Pastel-cyber: deep slate + low-saturation tinted accents
 MODEL_COLORS = {
-    0: {"hex": "#6ee7df", "soft": "rgba(110,231,223,0.18)", "rgb": "110,231,223"},   # dusty teal
-    1: {"hex": "#f5c97e", "soft": "rgba(245,201,126,0.18)", "rgb": "245,201,126"},   # soft amber
-    2: {"hex": "#d4a0c8", "soft": "rgba(212,160,200,0.18)", "rgb": "212,160,200"},   # muted mauve
-    3: {"hex": "#93c5fd", "soft": "rgba(147,197,253,0.18)", "rgb": "147,197,253"},   # slate blue
-    4: {"hex": "#86efac", "soft": "rgba(134,239,172,0.18)", "rgb": "134,239,172"},   # sage green
+    0: {"hex": "#6ee7df", "soft": "rgba(110,231,223,0.18)", "rgb": "110,231,223"},
+    1: {"hex": "#f5c97e", "soft": "rgba(245,201,126,0.18)", "rgb": "245,201,126"},
+    2: {"hex": "#d4a0c8", "soft": "rgba(212,160,200,0.18)", "rgb": "212,160,200"},
+    3: {"hex": "#93c5fd", "soft": "rgba(147,197,253,0.18)", "rgb": "147,197,253"},
+    4: {"hex": "#86efac", "soft": "rgba(134,239,172,0.18)", "rgb": "134,239,172"},
 }
 TIER_COLORS = {
     "SIMPLE": "#6ee7df",
     "MEDIUM": "#f5c97e",
     "DIRECT": "#d4a0c8",
+}
+
+# Neon-cyber: pitch-black base + full-saturation glowing accents
+NEON_MODEL_COLORS = {
+    0: {"hex": "#00f5d4", "soft": "rgba(0,245,212,0.2)",   "rgb": "0,245,212"},
+    1: {"hex": "#ffb700", "soft": "rgba(255,183,0,0.2)",   "rgb": "255,183,0"},
+    2: {"hex": "#ff3cac", "soft": "rgba(255,60,172,0.2)",  "rgb": "255,60,172"},
+    3: {"hex": "#a78bfa", "soft": "rgba(167,139,250,0.2)", "rgb": "167,139,250"},
+    4: {"hex": "#34d399", "soft": "rgba(52,211,153,0.2)",  "rgb": "52,211,153"},
+}
+NEON_TIER_COLORS = {
+    "SIMPLE": "#00f5d4",
+    "MEDIUM": "#ffb700",
+    "DIRECT": "#ff3cac",
 }
 
 
@@ -81,31 +94,43 @@ def aggregate(entries, label=""):
     savings_rate   = max(0.0, min((real_savings / total_baseline * 100) if total_baseline > 0 else 0, 100.0))
 
     # By model
-    by_model = defaultdict(lambda: {"count": 0, "cost": 0.0, "baseline": 0.0, "latencies": []})
+    by_model = defaultdict(lambda: {"count": 0, "cost": 0.0, "baseline": 0.0,
+                                    "latencies": [], "input_tokens": 0, "output_tokens": 0})
     for e in entries:
         m = e.get("model", "unknown")
-        by_model[m]["count"]    += 1
-        by_model[m]["cost"]     += e.get("cost", 0)
-        by_model[m]["baseline"] += e.get("baselineCost", 0)
+        by_model[m]["count"]         += 1
+        by_model[m]["cost"]          += e.get("cost", 0)
+        by_model[m]["baseline"]      += e.get("baselineCost", 0)
         by_model[m]["latencies"].append(e.get("latencyMs", 0))
+        by_model[m]["input_tokens"]  += e.get("inputTokens", 0)
+        by_model[m]["output_tokens"] += e.get("outputTokens", 0)
 
     models_list = []
+    has_tokens  = False  # True if at least one entry in this dataset has token data
     for i, (model, v) in enumerate(by_model.items()):
         avg_lat = sum(v["latencies"]) / len(v["latencies"]) if v["latencies"] else 0
         mdl_savings = max(0.0, v["baseline"] - v["cost"])
         sr = (mdl_savings / v["baseline"] * 100) if v["baseline"] > 0 else 0
+        total_tokens = v["input_tokens"] + v["output_tokens"]
+        if total_tokens > 0:
+            has_tokens = True
         models_list.append({
-            "model":       model,
-            "short":       model.split("/")[-1],
-            "count":       v["count"],
-            "cost":        v["cost"],
-            "baseline":    v["baseline"],
-            "savings":     mdl_savings,
-            "savings_pct": sr,
-            "avg_latency": avg_lat,
-            "color_idx":   i % len(MODEL_COLORS),
+            "model":         model,
+            "short":         model.split("/")[-1],
+            "count":         v["count"],
+            "cost":          v["cost"],
+            "baseline":      v["baseline"],
+            "savings":       mdl_savings,
+            "savings_pct":   sr,
+            "avg_latency":   avg_lat,
+            "input_tokens":  v["input_tokens"],
+            "output_tokens": v["output_tokens"],
+            "total_tokens":  total_tokens,
+            "color_idx":     i % len(MODEL_COLORS),
         })
     models_list.sort(key=lambda x: x["cost"], reverse=True)
+
+    return_dict_tokens = has_tokens
 
     # By tier
     by_tier = defaultdict(lambda: {"count": 0, "cost": 0.0})
@@ -141,6 +166,7 @@ def aggregate(entries, label=""):
         "avg_latency":    avg_latency,
         "savings_rate":   savings_rate,
         "models":         models_list,
+        "has_tokens":     return_dict_tokens,
         "by_tier":        dict(by_tier),
         "timeline":       dict(timeline),
         "lat_buckets":    lat_buckets,
@@ -151,34 +177,47 @@ def aggregate(entries, label=""):
 def mc(idx, key="hex"):
     return MODEL_COLORS[idx % len(MODEL_COLORS)][key]
 
+def ncm(idx, key="hex"):
+    return NEON_MODEL_COLORS[idx % len(NEON_MODEL_COLORS)][key]
+
 
 def chart_data(data):
     models = data["models"]
 
     donut_labels = json.dumps([m["short"] for m in models])
     donut_costs  = json.dumps([round(m["cost"], 6) for m in models])
+
+    # pastel colours
     donut_colors = json.dumps([mc(m["color_idx"]) for m in models])
     donut_soft   = json.dumps([mc(m["color_idx"], "soft") for m in models])
+    bar_colors   = json.dumps([mc(m["color_idx"]) for m in models])
+    bar_soft     = json.dumps([mc(m["color_idx"], "soft") for m in models])
+
+    # neon colours
+    donut_colors_neon = json.dumps([ncm(m["color_idx"]) for m in models])
+    donut_soft_neon   = json.dumps([ncm(m["color_idx"], "soft") for m in models])
+    bar_colors_neon   = json.dumps([ncm(m["color_idx"]) for m in models])
+    bar_soft_neon     = json.dumps([ncm(m["color_idx"], "soft") for m in models])
 
     bar_labels   = json.dumps([m["short"] for m in models])
     bar_cost     = json.dumps([round(m["cost"], 4) for m in models])
     bar_baseline = json.dumps([round(m["baseline"], 4) for m in models])
     bar_savings  = json.dumps([round(m["savings"], 4) for m in models])
-    bar_colors   = json.dumps([mc(m["color_idx"]) for m in models])
-    bar_soft     = json.dumps([mc(m["color_idx"], "soft") for m in models])
 
     all_times  = sorted(data["timeline"].keys())
     tl_labels  = json.dumps(all_times)
-    tl_datasets = []
+
+    tl_datasets_pastel = []
+    tl_datasets_neon   = []
     for m in models:
-        c    = MODEL_COLORS[m["color_idx"]]
+        cp = MODEL_COLORS[m["color_idx"]]
+        cn = NEON_MODEL_COLORS[m["color_idx"] % len(NEON_MODEL_COLORS)]
         vals = [round(data["timeline"].get(t, {}).get(m["model"], 0), 6) for t in all_times]
-        tl_datasets.append({
-            "label": m["short"], "data": vals,
-            "borderColor": c["hex"], "backgroundColor": c["soft"],
-            "fill": True, "tension": 0.4, "pointRadius": 2,
-        })
-    tl_datasets_json = json.dumps(tl_datasets)
+        base = {"label": m["short"], "data": vals, "fill": True, "tension": 0.4, "pointRadius": 2}
+        tl_datasets_pastel.append({**base, "borderColor": cp["hex"], "backgroundColor": cp["soft"]})
+        tl_datasets_neon.append(  {**base, "borderColor": cn["hex"], "backgroundColor": cn["soft"]})
+    tl_datasets_json      = json.dumps(tl_datasets_pastel)
+    tl_datasets_neon_json = json.dumps(tl_datasets_neon)
 
     lat_labels = json.dumps(["0-2s","2-4s","4-6s","6-8s","8-10s","10-12s","12-14s","14-16s","16-18s","18s+"])
     lat_data   = json.dumps(data["lat_buckets"])
@@ -186,16 +225,20 @@ def chart_data(data):
     return dict(
         donut_labels=donut_labels, donut_costs=donut_costs,
         donut_colors=donut_colors, donut_soft=donut_soft,
+        donut_colors_neon=donut_colors_neon, donut_soft_neon=donut_soft_neon,
         bar_labels=bar_labels, bar_cost=bar_cost,
         bar_baseline=bar_baseline, bar_savings=bar_savings,
         bar_colors=bar_colors, bar_soft=bar_soft,
-        tl_labels=tl_labels, tl_datasets_json=tl_datasets_json,
+        bar_colors_neon=bar_colors_neon, bar_soft_neon=bar_soft_neon,
+        tl_labels=tl_labels,
+        tl_datasets_json=tl_datasets_json,
+        tl_datasets_neon_json=tl_datasets_neon_json,
         lat_labels=lat_labels, lat_data=lat_data,
     )
 
 
 # ─── HTML fragments ───────────────────────────────────────────────────────────
-def model_rows_html(models):
+def model_rows_html(models, has_tokens=False):
     rows = []
     for m in models:
         c   = MODEL_COLORS[m["color_idx"]]
@@ -203,6 +246,23 @@ def model_rows_html(models):
         pill = (f'<span class="pill" style="background:rgba({c["rgb"]},0.12);'
                 f'color:{c["hex"]};border:1px solid rgba({c["rgb"]},0.3);">'
                 f'{m["savings_pct"]:.1f}%</span>')
+
+        if has_tokens:
+            if m["total_tokens"] > 0:
+                tok_cell = (
+                    f'<span title="In: {m["input_tokens"]:,} · Out: {m["output_tokens"]:,}">'
+                    f'{m["total_tokens"]:,}'
+                    f'</span>'
+                    f'<span class="tok-breakdown"> '
+                    f'{m["input_tokens"]//1000}k↑ {m["output_tokens"]//1000}k↓'
+                    f'</span>'
+                )
+            else:
+                tok_cell = '<span class="dim">—</span>'
+            token_td = f'<td class="num tok-cell">{tok_cell}</td>'
+        else:
+            token_td = ""
+
         rows.append(
             f'<tr>'
             f'<td>{dot}<span class="model-name">{m["short"]}</span></td>'
@@ -211,6 +271,7 @@ def model_rows_html(models):
             f'<td class="num dim">${m["baseline"]:.4f}</td>'
             f'<td class="num" style="color:{c["hex"]};">${m["savings"]:.4f}</td>'
             f'<td class="num">{pill}</td>'
+            f'{token_td}'
             f'<td class="num dim">{m["avg_latency"]:.0f} ms</td>'
             f'</tr>'
         )
@@ -257,9 +318,11 @@ def render_section(data, section_id, is_global=False):
     c  = chart_data(data)
     sr = data["savings_rate"]
     gauge_dash, gauge_offset, gauge_color = gauge_svg(sr)
-    rows   = model_rows_html(data["models"])
+    rows   = model_rows_html(data["models"], data.get("has_tokens", False))
     tiers  = tier_badges_html(data["by_tier"])
     uid    = section_id.replace("-", "_")  # safe JS var prefix
+    has_tokens = data.get("has_tokens", False)
+    token_th = '<th title="inputTokens + outputTokens">Tokens</th>' if has_tokens else ""
 
     heading = "Aggregated Overview — All Days" if is_global else f"Daily Report · {data['label']}"
     tag_cls = "section-tag-global" if is_global else "section-tag-daily"
@@ -363,7 +426,7 @@ def render_section(data, section_id, is_global=False):
         <thead>
           <tr>
             <th>Model</th><th>Req</th><th>Actual</th>
-            <th>Baseline</th><th>Saved</th><th>Rate</th><th>Avg Lat</th>
+            <th>Baseline</th><th>Saved</th><th>Rate</th>{token_th}<th>Avg Lat</th>
           </tr>
         </thead>
         <tbody>{rows}</tbody>
@@ -381,84 +444,125 @@ def render_section(data, section_id, is_global=False):
 
 <script>
 (function() {{
-  const COLORS  = {c['donut_colors']};
-  const SOFT    = {c['donut_soft']};
-  const BCOLORS = {c['bar_colors']};
-  const BSOFT   = {c['bar_soft']};
-  const gridColor = 'rgba(180,190,220,0.07)';
-  const tickColor = '#7a86a8';
-  const legendColor = '#a8b4cc';
+  window.CHARTS = window.CHARTS || {{}};
+  const isNeon  = () => document.documentElement.getAttribute('data-theme') === 'neon';
 
-  new Chart(document.getElementById('{uid}_donutChart'), {{
+  // Both palettes for this section
+  const P_COLORS = {c['donut_colors']};
+  const P_SOFT   = {c['donut_soft']};
+  const N_COLORS = {c['donut_colors_neon']};
+  const N_SOFT   = {c['donut_soft_neon']};
+  const PB_COLORS = {c['bar_colors']};
+  const PB_SOFT   = {c['bar_soft']};
+  const NB_COLORS = {c['bar_colors_neon']};
+  const NB_SOFT   = {c['bar_soft_neon']};
+  const TL_PASTEL = {c['tl_datasets_json']};
+  const TL_NEON   = {c['tl_datasets_neon_json']};
+
+  const themeColors = () => {{
+    const neon = isNeon();
+    return {{
+      grid:           neon ? 'rgba(0,245,212,0.06)'   : 'rgba(180,190,220,0.07)',
+      tick:           neon ? '#3a4d6a'                 : '#7a86a8',
+      legend:         neon ? '#5a7090'                 : '#a8b4cc',
+      baselineBg:     neon ? 'rgba(58,77,106,0.3)'    : 'rgba(120,130,160,0.25)',
+      baselineBorder: neon ? 'rgba(58,77,106,0.7)'    : 'rgba(120,130,160,0.6)',
+      savingsBg:      neon ? 'rgba(0,245,212,0.1)'    : 'rgba(110,231,223,0.1)',
+      savingsBorder:  neon ? '#00f5d4'                 : '#6ee7df',
+      latBg:          neon ? 'rgba(255,183,0,0.18)'   : 'rgba(245,201,126,0.2)',
+      latBorder:      neon ? '#ffb700'                 : '#f5c97e',
+      modelColors:    neon ? N_COLORS : P_COLORS,
+      modelSoft:      neon ? N_SOFT   : P_SOFT,
+      barColors:      neon ? NB_COLORS : PB_COLORS,
+      barSoft:        neon ? NB_SOFT   : PB_SOFT,
+    }};
+  }};
+
+  const tc = themeColors();
+
+  // ── Donut ──
+  const donut = new Chart(document.getElementById('{uid}_donutChart'), {{
     type: 'doughnut',
     data: {{
       labels: {c['donut_labels']},
-      datasets: [{{ data: {c['donut_costs']}, backgroundColor: SOFT, borderColor: COLORS, borderWidth: 1.5, hoverOffset: 5 }}]
+      datasets: [{{ data: {c['donut_costs']}, backgroundColor: tc.modelSoft, borderColor: tc.modelColors, borderWidth: 1.5, hoverOffset: 5 }}]
     }},
     options: {{
       responsive: true, maintainAspectRatio: false, cutout: '68%',
       plugins: {{
-        legend: {{ position: 'right', labels: {{ boxWidth: 10, padding: 12, color: legendColor }} }},
+        legend: {{ position: 'right', labels: {{ boxWidth: 10, padding: 12, color: tc.legend }} }},
         tooltip: {{ callbacks: {{ label: ctx => ' $' + ctx.parsed.toFixed(6) }} }}
       }}
     }}
   }});
+  window.CHARTS['{uid}_donutChart'] = {{ chart: donut, role: 'donut',
+    pastel: {{ colors: P_COLORS, soft: P_SOFT }}, neon: {{ colors: N_COLORS, soft: N_SOFT }} }};
 
-  new Chart(document.getElementById('{uid}_barChart'), {{
+  // ── Bar ──
+  const bar = new Chart(document.getElementById('{uid}_barChart'), {{
     type: 'bar',
     data: {{
       labels: {c['bar_labels']},
       datasets: [
-        {{ label: 'Baseline', data: {c['bar_baseline']}, backgroundColor: 'rgba(120,130,160,0.25)', borderColor: 'rgba(120,130,160,0.6)', borderWidth: 1, borderRadius: 4 }},
-        {{ label: 'Actual Cost', data: {c['bar_cost']}, backgroundColor: BSOFT, borderColor: BCOLORS, borderWidth: 1.5, borderRadius: 4 }},
-        {{ label: 'Savings', data: {c['bar_savings']}, backgroundColor: 'rgba(110,231,223,0.1)', borderColor: '#6ee7df', borderWidth: 1, borderRadius: 4 }}
+        {{ label: 'Baseline',    data: {c['bar_baseline']}, backgroundColor: tc.baselineBg, borderColor: tc.baselineBorder, borderWidth: 1, borderRadius: 4 }},
+        {{ label: 'Actual Cost', data: {c['bar_cost']},     backgroundColor: tc.barSoft, borderColor: tc.barColors, borderWidth: 1.5, borderRadius: 4 }},
+        {{ label: 'Savings',     data: {c['bar_savings']},  backgroundColor: tc.savingsBg, borderColor: tc.savingsBorder, borderWidth: 1, borderRadius: 4 }}
       ]
     }},
     options: {{
       responsive: true, maintainAspectRatio: false,
       plugins: {{
-        legend: {{ position: 'bottom', labels: {{ boxWidth: 10, padding: 10, color: legendColor }} }},
+        legend: {{ position: 'bottom', labels: {{ boxWidth: 10, padding: 10, color: tc.legend }} }},
         tooltip: {{ callbacks: {{ label: ctx => ' $' + ctx.parsed.y.toFixed(4) }} }}
       }},
       scales: {{
-        x: {{ grid: {{ color: gridColor }}, ticks: {{ color: tickColor, maxRotation: 0 }} }},
-        y: {{ grid: {{ color: gridColor }}, ticks: {{ color: tickColor, callback: v => '$' + v.toFixed(1) }} }}
+        x: {{ grid: {{ color: tc.grid }}, ticks: {{ color: tc.tick, maxRotation: 0 }} }},
+        y: {{ grid: {{ color: tc.grid }}, ticks: {{ color: tc.tick, callback: v => '$' + v.toFixed(1) }} }}
       }}
     }}
   }});
+  window.CHARTS['{uid}_barChart'] = {{ chart: bar, role: 'bar',
+    pastel: {{ colors: PB_COLORS, soft: PB_SOFT }}, neon: {{ colors: NB_COLORS, soft: NB_SOFT }} }};
 
-  new Chart(document.getElementById('{uid}_tlChart'), {{
+  // ── Timeline ──
+  const tlData = isNeon() ? TL_NEON : TL_PASTEL;
+  const tl = new Chart(document.getElementById('{uid}_tlChart'), {{
     type: 'line',
-    data: {{ labels: {c['tl_labels']}, datasets: {c['tl_datasets_json']} }},
+    data: {{ labels: {c['tl_labels']}, datasets: tlData }},
     options: {{
       responsive: true, maintainAspectRatio: false,
       interaction: {{ mode: 'index', intersect: false }},
       plugins: {{
-        legend: {{ position: 'bottom', labels: {{ boxWidth: 10, padding: 12, color: legendColor }} }},
+        legend: {{ position: 'bottom', labels: {{ boxWidth: 10, padding: 12, color: tc.legend }} }},
         tooltip: {{ callbacks: {{ label: ctx => ' $' + ctx.parsed.y.toFixed(6) }} }}
       }},
       scales: {{
-        x: {{ grid: {{ color: gridColor }}, ticks: {{ color: tickColor, maxTicksLimit: 18, maxRotation: 0 }} }},
-        y: {{ grid: {{ color: gridColor }}, stacked: true, ticks: {{ color: tickColor, callback: v => '$' + v.toFixed(4) }} }}
+        x: {{ grid: {{ color: tc.grid }}, ticks: {{ color: tc.tick, maxTicksLimit: 18, maxRotation: 0 }} }},
+        y: {{ grid: {{ color: tc.grid }}, stacked: true, ticks: {{ color: tc.tick, callback: v => '$' + v.toFixed(4) }} }}
       }}
     }}
   }});
+  window.CHARTS['{uid}_tlChart'] = {{ chart: tl, role: 'tl',
+    pastel: {{ tl: TL_PASTEL }}, neon: {{ tl: TL_NEON }} }};
 
-  new Chart(document.getElementById('{uid}_latChart'), {{
+  // ── Latency ──
+  const lat = new Chart(document.getElementById('{uid}_latChart'), {{
     type: 'bar',
     data: {{
       labels: {c['lat_labels']},
-      datasets: [{{ label: 'Requests', data: {c['lat_data']}, backgroundColor: 'rgba(245,201,126,0.2)', borderColor: '#f5c97e', borderWidth: 1, borderRadius: 3 }}]
+      datasets: [{{ label: 'Requests', data: {c['lat_data']}, backgroundColor: tc.latBg, borderColor: tc.latBorder, borderWidth: 1, borderRadius: 3 }}]
     }},
     options: {{
       responsive: true, maintainAspectRatio: false,
       plugins: {{ legend: {{ display: false }} }},
       scales: {{
-        x: {{ grid: {{ color: gridColor }}, ticks: {{ color: tickColor, maxRotation: 45, font: {{ size: 9 }} }} }},
-        y: {{ grid: {{ color: gridColor }}, ticks: {{ color: tickColor }} }}
+        x: {{ grid: {{ color: tc.grid }}, ticks: {{ color: tc.tick, maxRotation: 45, font: {{ size: 9 }} }} }},
+        y: {{ grid: {{ color: tc.grid }}, ticks: {{ color: tc.tick }} }}
       }}
     }}
   }});
+  window.CHARTS['{uid}_latChart'] = {{ chart: lat, role: 'lat' }};
+
 }})();
 </script>
 """
@@ -468,26 +572,47 @@ def render_section(data, section_id, is_global=False):
 CSS = """
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Pastel theme (default) ── */
 :root {
-  --bg:        #0f1320;
-  --bg2:       #141929;
-  --surface:   #1a2035;
-  --surface2:  #1f2640;
-  --border:    rgba(180,195,230,0.09);
-  --border2:   rgba(180,195,230,0.15);
-  --text:      #ccd6f0;
-  --dim:       #7a86a8;
-  --faint:     rgba(180,195,230,0.05);
-  --teal:      #6ee7df;
-  --amber:     #f5c97e;
-  --mauve:     #d4a0c8;
-  --sage:      #86efac;
-  --blue:      #93c5fd;
-  --font-hdr:  'Bebas Neue', sans-serif;
-  --font-ui:   'DM Sans', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --sidebar-w: 200px;
-  --radius:    10px;
+  --bg:         #0f1320;
+  --bg2:        #141929;
+  --surface:    #1a2035;
+  --surface2:   #1f2640;
+  --border:     rgba(180,195,230,0.09);
+  --border2:    rgba(180,195,230,0.15);
+  --text:       #ccd6f0;
+  --dim:        #7a86a8;
+  --faint:      rgba(180,195,230,0.05);
+  --teal:       #6ee7df;
+  --amber:      #f5c97e;
+  --mauve:      #d4a0c8;
+  --sage:       #86efac;
+  --blue:       #93c5fd;
+  --grid-color: rgba(110,231,223,0.025);
+  --font-hdr:   'Bebas Neue', sans-serif;
+  --font-ui:    'DM Sans', sans-serif;
+  --font-mono:  'JetBrains Mono', monospace;
+  --sidebar-w:  200px;
+  --radius:     10px;
+}
+
+/* ── Neon theme override ── */
+[data-theme="neon"] {
+  --bg:         #07080f;
+  --bg2:        #0a0b14;
+  --surface:    #0d0f1c;
+  --surface2:   #111320;
+  --border:     rgba(0,245,212,0.1);
+  --border2:    rgba(0,245,212,0.22);
+  --text:       #c8d8f0;
+  --dim:        #3a4d6a;
+  --faint:      rgba(0,245,212,0.04);
+  --teal:       #00f5d4;
+  --amber:      #ffb700;
+  --mauve:      #ff3cac;
+  --sage:       #a78bfa;
+  --blue:       #22d3ee;
+  --grid-color: rgba(0,245,212,0.05);
 }
 
 html, body {
@@ -497,6 +622,7 @@ html, body {
   font-size: 13px;
   line-height: 1.5;
   min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
 }
 
 /* subtle grid overlay */
@@ -504,9 +630,23 @@ body::after {
   content: '';
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    linear-gradient(rgba(110,231,223,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(110,231,223,0.025) 1px, transparent 1px);
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: 44px 44px;
+  transition: background-image 0.3s;
+}
+
+/* neon body glow scanline */
+[data-theme="neon"] body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
 }
 
 /* ── Layout ── */
@@ -522,6 +662,7 @@ body::after {
   height: 100vh; overflow-y: auto;
   display: flex; flex-direction: column;
   padding: 20px 0 24px;
+  transition: background 0.3s, border-color 0.3s;
 }
 .sidebar-brand {
   padding: 0 18px 18px;
@@ -536,6 +677,9 @@ body::after {
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
   line-height: 1;
+}
+[data-theme="neon"] .sidebar-brand h1 {
+  filter: drop-shadow(0 0 8px var(--teal));
 }
 .sidebar-brand .tagline {
   font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
@@ -554,6 +698,7 @@ body::after {
 }
 .nav-link:hover { color: var(--text); background: var(--faint); }
 .nav-link.active { color: var(--teal); border-left-color: var(--teal); background: rgba(110,231,223,0.05); }
+[data-theme="neon"] .nav-link.active { background: rgba(0,245,212,0.06); }
 .nav-link .nav-date { display: block; font-size: 11px; color: inherit; }
 .nav-link .nav-meta { display: block; font-size: 9px; color: var(--dim); }
 .nav-link.global-link { color: var(--amber); }
@@ -561,12 +706,43 @@ body::after {
   color: var(--amber); border-left-color: var(--amber);
   background: rgba(245,201,126,0.06);
 }
+[data-theme="neon"] .nav-link.global-link:hover,
+[data-theme="neon"] .nav-link.global-link.active {
+  background: rgba(255,183,0,0.07);
+}
 .sidebar-footer {
   margin-top: auto; padding: 12px 18px 0;
   border-top: 1px solid var(--border);
   font-size: 9px; color: var(--dim); letter-spacing: 1px;
   line-height: 1.8;
 }
+
+/* ── Theme toggle button ── */
+.theme-toggle {
+  display: flex; align-items: center; gap: 7px;
+  margin: 10px 18px 0;
+  padding: 7px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  color: var(--dim);
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: calc(100% - 36px);
+  justify-content: center;
+}
+.theme-toggle:hover {
+  color: var(--teal);
+  border-color: var(--teal);
+  background: var(--faint);
+}
+[data-theme="neon"] .theme-toggle:hover {
+  box-shadow: 0 0 10px rgba(0,245,212,0.2);
+}
+.theme-toggle-icon { font-size: 13px; }
 
 /* ── Main content ── */
 .content { flex: 1; padding: 24px 28px; min-width: 0; }
@@ -589,10 +765,13 @@ body::after {
 }
 .section-tag-global { background: rgba(245,201,126,0.15); color: var(--amber); border: 1px solid rgba(245,201,126,0.3); }
 .section-tag-daily  { background: rgba(110,231,223,0.1);  color: var(--teal);  border: 1px solid rgba(110,231,223,0.25); }
+[data-theme="neon"] .section-tag-global { background: rgba(255,183,0,0.1); border-color: rgba(255,183,0,0.4); }
+[data-theme="neon"] .section-tag-daily  { background: rgba(0,245,212,0.08); border-color: rgba(0,245,212,0.3); }
 .section-title {
   font-family: var(--font-hdr); font-size: 26px; letter-spacing: 1.5px;
   color: #dde8ff; display: inline;
 }
+[data-theme="neon"] .section-title { text-shadow: 0 0 20px rgba(110,180,255,0.3); }
 .section-meta { font-size: 11px; color: var(--dim); display: flex; gap: 6px; align-items: center; }
 
 /* ── KPI Strip ── */
@@ -604,13 +783,15 @@ body::after {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 13px 15px;
   position: relative; overflow: hidden;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.3s;
 }
 .kpi::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
   background: var(--accent, var(--teal));
   opacity: 0.7;
+  transition: opacity 0.3s;
 }
+[data-theme="neon"] .kpi::before { opacity: 1; box-shadow: 0 0 8px var(--accent, var(--teal)); }
 .kpi:hover { border-color: var(--border2); }
 .kpi-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); margin-bottom: 5px; }
 .kpi-value { font-family: var(--font-hdr); font-size: 28px; letter-spacing: 1px; color: #e8eeff; line-height: 1; }
@@ -624,7 +805,6 @@ body::after {
   gap: 10px; margin-bottom: 10px;
 }
 .span2 { grid-column: span 2; }
-
 .bottom-grid {
   display: grid; grid-template-columns: 1fr 210px; gap: 10px;
   margin-bottom: 10px;
@@ -634,7 +814,9 @@ body::after {
 .card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 14px 16px;
+  transition: background 0.3s, border-color 0.3s;
 }
+[data-theme="neon"] .card:hover { border-color: rgba(0,245,212,0.18); }
 .card-title {
   font-family: var(--font-ui, var(--font-mono));
   font-size: 10px; font-weight: 600; letter-spacing: 2px;
@@ -649,6 +831,7 @@ body::after {
 .gauge-wrap { position: relative; width: 140px; height: 140px; margin: 6px auto 14px; }
 .gauge-wrap svg { transform: rotate(-90deg); }
 .gauge-bg   { fill: none; stroke: rgba(180,195,230,0.07); stroke-width: 9; }
+[data-theme="neon"] .gauge-bg { stroke: rgba(0,245,212,0.06); }
 .gauge-fill { fill: none; stroke-width: 9; stroke-linecap: round; }
 .gauge-center {
   position: absolute; inset: 0;
@@ -662,7 +845,9 @@ body::after {
 .tier-badge {
   border: 1px solid; border-radius: 7px; padding: 7px 10px;
   display: flex; justify-content: space-between; align-items: center;
+  transition: all 0.3s;
 }
+[data-theme="neon"] .tier-badge { box-shadow: inset 0 0 12px rgba(0,0,0,0.3); }
 .tier-name  { font-size: 10px; letter-spacing: 1px; font-weight: 600; }
 .tier-count { font-size: 9px; color: var(--dim); }
 .tier-cost  { font-size: 10px; font-weight: 600; }
@@ -686,6 +871,9 @@ body::after {
 td.num { text-align: right; }
 td.dim { color: var(--dim); }
 .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+[data-theme="neon"] .dot { box-shadow: 0 0 5px currentColor; }
+.tok-cell { white-space: nowrap; }
+.tok-breakdown { font-size: 9px; color: var(--dim); margin-left: 4px; letter-spacing: 0.5px; }
 .model-name { font-size: 11px; vertical-align: middle; }
 .pill { display: inline-block; padding: 2px 6px; border-radius: 20px; font-size: 10px; font-weight: 600; }
 
@@ -724,7 +912,7 @@ def build_html(global_data, daily_data_list, generated_at, log_dir):
     total_cost  = global_data["total_cost"] if global_data else 0
 
     return f"""<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="pastel">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -735,6 +923,89 @@ def build_html(global_data, daily_data_list, generated_at, log_dir):
 <style>{CSS}</style>
 </head>
 <body>
+
+<script>
+// ── Theme engine (runs before sections render) ──────────────────────────────
+window.CHARTS = {{}};
+
+window.applyTheme = function(theme, save) {{
+  const neon = theme === 'neon';
+  document.documentElement.setAttribute('data-theme', theme);
+  if (save) localStorage.setItem('blockrun-theme', theme);
+
+  const btn = document.getElementById('theme-toggle');
+  if (btn) {{
+    btn.querySelector('.theme-toggle-icon').textContent = neon ? '◎' : '◈';
+    btn.querySelector('.theme-toggle-label').textContent = neon ? 'Pastel' : 'Neon';
+  }}
+
+  const grid   = neon ? 'rgba(0,245,212,0.06)'  : 'rgba(180,190,220,0.07)';
+  const tick   = neon ? '#3a4d6a'                : '#7a86a8';
+  const legend = neon ? '#5a7090'                : '#a8b4cc';
+  const bbg    = neon ? 'rgba(58,77,106,0.3)'   : 'rgba(120,130,160,0.25)';
+  const bbd    = neon ? 'rgba(58,77,106,0.7)'   : 'rgba(120,130,160,0.6)';
+  const sbg    = neon ? 'rgba(0,245,212,0.1)'   : 'rgba(110,231,223,0.1)';
+  const sbd    = neon ? '#00f5d4'                : '#6ee7df';
+  const lbg    = neon ? 'rgba(255,183,0,0.18)'  : 'rgba(245,201,126,0.2)';
+  const lbd    = neon ? '#ffb700'                : '#f5c97e';
+
+  Object.values(window.CHARTS).forEach(reg => {{
+    const ch = reg.chart;
+
+    if (reg.role === 'donut') {{
+      const colors = neon ? reg.neon.colors : reg.pastel.colors;
+      const soft   = neon ? reg.neon.soft   : reg.pastel.soft;
+      ch.data.datasets[0].borderColor     = colors;
+      ch.data.datasets[0].backgroundColor = soft;
+      ch.options.plugins.legend.labels.color = legend;
+
+    }} else if (reg.role === 'bar') {{
+      const colors = neon ? reg.neon.colors : reg.pastel.colors;
+      const soft   = neon ? reg.neon.soft   : reg.pastel.soft;
+      ch.data.datasets[0].backgroundColor = bbg;
+      ch.data.datasets[0].borderColor     = bbd;
+      ch.data.datasets[1].backgroundColor = soft;
+      ch.data.datasets[1].borderColor     = colors;
+      ch.data.datasets[2].backgroundColor = sbg;
+      ch.data.datasets[2].borderColor     = sbd;
+      ch.options.plugins.legend.labels.color   = legend;
+      ch.options.scales.x.grid.color           = grid;
+      ch.options.scales.x.ticks.color          = tick;
+      ch.options.scales.y.grid.color           = grid;
+      ch.options.scales.y.ticks.color          = tick;
+
+    }} else if (reg.role === 'tl') {{
+      const ds = neon ? reg.neon.tl : reg.pastel.tl;
+      ds.forEach((d, i) => {{
+        if (ch.data.datasets[i]) {{
+          ch.data.datasets[i].borderColor     = d.borderColor;
+          ch.data.datasets[i].backgroundColor = d.backgroundColor;
+        }}
+      }});
+      ch.options.plugins.legend.labels.color   = legend;
+      ch.options.scales.x.grid.color           = grid;
+      ch.options.scales.x.ticks.color          = tick;
+      ch.options.scales.y.grid.color           = grid;
+      ch.options.scales.y.ticks.color          = tick;
+
+    }} else if (reg.role === 'lat') {{
+      ch.data.datasets[0].backgroundColor = lbg;
+      ch.data.datasets[0].borderColor     = lbd;
+      ch.options.scales.x.grid.color      = grid;
+      ch.options.scales.x.ticks.color     = tick;
+      ch.options.scales.y.grid.color      = grid;
+      ch.options.scales.y.ticks.color     = tick;
+    }}
+
+    ch.update('none');
+  }});
+}};
+
+// Restore saved theme (before sections create their charts)
+const _saved = localStorage.getItem('blockrun-theme') || 'pastel';
+if (_saved !== 'pastel') document.documentElement.setAttribute('data-theme', _saved);
+</script>
+
 <div class="layout">
 
   <!-- ── Sidebar ── -->
@@ -757,6 +1028,11 @@ def build_html(global_data, daily_data_list, generated_at, log_dir):
       {total_days} day(s) ingested<br>
       Generated {generated_at}<br>
       BlockRun Intelligence
+      <button class="theme-toggle" id="theme-toggle"
+        onclick="applyTheme(document.documentElement.getAttribute('data-theme')==='neon'?'pastel':'neon', true)">
+        <span class="theme-toggle-icon">◈</span>
+        <span class="theme-toggle-label">Neon</span>
+      </button>
     </div>
   </nav>
 
@@ -782,6 +1058,9 @@ const observer = new IntersectionObserver(entries => {{
   }});
 }}, {{ threshold: 0.25 }});
 sections.forEach(s => observer.observe(s));
+
+// Sync toggle button label to saved theme after everything is rendered
+applyTheme(localStorage.getItem('blockrun-theme') || 'pastel', false);
 </script>
 </body>
 </html>"""

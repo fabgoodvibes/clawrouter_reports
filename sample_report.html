@@ -1,35 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="pastel">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BlockRun Reports · blockrun</title>
+<title>BlockRun Reports · theme_test</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;600&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Pastel theme (default) ── */
 :root {
-  --bg:        #0f1320;
-  --bg2:       #141929;
-  --surface:   #1a2035;
-  --surface2:  #1f2640;
-  --border:    rgba(180,195,230,0.09);
-  --border2:   rgba(180,195,230,0.15);
-  --text:      #ccd6f0;
-  --dim:       #7a86a8;
-  --faint:     rgba(180,195,230,0.05);
-  --teal:      #6ee7df;
-  --amber:     #f5c97e;
-  --mauve:     #d4a0c8;
-  --sage:      #86efac;
-  --blue:      #93c5fd;
-  --font-hdr:  'Bebas Neue', sans-serif;
-  --font-ui:   'DM Sans', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --sidebar-w: 200px;
-  --radius:    10px;
+  --bg:         #0f1320;
+  --bg2:        #141929;
+  --surface:    #1a2035;
+  --surface2:   #1f2640;
+  --border:     rgba(180,195,230,0.09);
+  --border2:    rgba(180,195,230,0.15);
+  --text:       #ccd6f0;
+  --dim:        #7a86a8;
+  --faint:      rgba(180,195,230,0.05);
+  --teal:       #6ee7df;
+  --amber:      #f5c97e;
+  --mauve:      #d4a0c8;
+  --sage:       #86efac;
+  --blue:       #93c5fd;
+  --grid-color: rgba(110,231,223,0.025);
+  --font-hdr:   'Bebas Neue', sans-serif;
+  --font-ui:    'DM Sans', sans-serif;
+  --font-mono:  'JetBrains Mono', monospace;
+  --sidebar-w:  200px;
+  --radius:     10px;
+}
+
+/* ── Neon theme override ── */
+[data-theme="neon"] {
+  --bg:         #07080f;
+  --bg2:        #0a0b14;
+  --surface:    #0d0f1c;
+  --surface2:   #111320;
+  --border:     rgba(0,245,212,0.1);
+  --border2:    rgba(0,245,212,0.22);
+  --text:       #c8d8f0;
+  --dim:        #3a4d6a;
+  --faint:      rgba(0,245,212,0.04);
+  --teal:       #00f5d4;
+  --amber:      #ffb700;
+  --mauve:      #ff3cac;
+  --sage:       #a78bfa;
+  --blue:       #22d3ee;
+  --grid-color: rgba(0,245,212,0.05);
 }
 
 html, body {
@@ -39,6 +60,7 @@ html, body {
   font-size: 13px;
   line-height: 1.5;
   min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
 }
 
 /* subtle grid overlay */
@@ -46,9 +68,23 @@ body::after {
   content: '';
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    linear-gradient(rgba(110,231,223,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(110,231,223,0.025) 1px, transparent 1px);
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: 44px 44px;
+  transition: background-image 0.3s;
+}
+
+/* neon body glow scanline */
+[data-theme="neon"] body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
 }
 
 /* ── Layout ── */
@@ -64,6 +100,7 @@ body::after {
   height: 100vh; overflow-y: auto;
   display: flex; flex-direction: column;
   padding: 20px 0 24px;
+  transition: background 0.3s, border-color 0.3s;
 }
 .sidebar-brand {
   padding: 0 18px 18px;
@@ -78,6 +115,9 @@ body::after {
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
   line-height: 1;
+}
+[data-theme="neon"] .sidebar-brand h1 {
+  filter: drop-shadow(0 0 8px var(--teal));
 }
 .sidebar-brand .tagline {
   font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
@@ -96,6 +136,7 @@ body::after {
 }
 .nav-link:hover { color: var(--text); background: var(--faint); }
 .nav-link.active { color: var(--teal); border-left-color: var(--teal); background: rgba(110,231,223,0.05); }
+[data-theme="neon"] .nav-link.active { background: rgba(0,245,212,0.06); }
 .nav-link .nav-date { display: block; font-size: 11px; color: inherit; }
 .nav-link .nav-meta { display: block; font-size: 9px; color: var(--dim); }
 .nav-link.global-link { color: var(--amber); }
@@ -103,12 +144,43 @@ body::after {
   color: var(--amber); border-left-color: var(--amber);
   background: rgba(245,201,126,0.06);
 }
+[data-theme="neon"] .nav-link.global-link:hover,
+[data-theme="neon"] .nav-link.global-link.active {
+  background: rgba(255,183,0,0.07);
+}
 .sidebar-footer {
   margin-top: auto; padding: 12px 18px 0;
   border-top: 1px solid var(--border);
   font-size: 9px; color: var(--dim); letter-spacing: 1px;
   line-height: 1.8;
 }
+
+/* ── Theme toggle button ── */
+.theme-toggle {
+  display: flex; align-items: center; gap: 7px;
+  margin: 10px 18px 0;
+  padding: 7px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  color: var(--dim);
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: calc(100% - 36px);
+  justify-content: center;
+}
+.theme-toggle:hover {
+  color: var(--teal);
+  border-color: var(--teal);
+  background: var(--faint);
+}
+[data-theme="neon"] .theme-toggle:hover {
+  box-shadow: 0 0 10px rgba(0,245,212,0.2);
+}
+.theme-toggle-icon { font-size: 13px; }
 
 /* ── Main content ── */
 .content { flex: 1; padding: 24px 28px; min-width: 0; }
@@ -131,10 +203,13 @@ body::after {
 }
 .section-tag-global { background: rgba(245,201,126,0.15); color: var(--amber); border: 1px solid rgba(245,201,126,0.3); }
 .section-tag-daily  { background: rgba(110,231,223,0.1);  color: var(--teal);  border: 1px solid rgba(110,231,223,0.25); }
+[data-theme="neon"] .section-tag-global { background: rgba(255,183,0,0.1); border-color: rgba(255,183,0,0.4); }
+[data-theme="neon"] .section-tag-daily  { background: rgba(0,245,212,0.08); border-color: rgba(0,245,212,0.3); }
 .section-title {
   font-family: var(--font-hdr); font-size: 26px; letter-spacing: 1.5px;
   color: #dde8ff; display: inline;
 }
+[data-theme="neon"] .section-title { text-shadow: 0 0 20px rgba(110,180,255,0.3); }
 .section-meta { font-size: 11px; color: var(--dim); display: flex; gap: 6px; align-items: center; }
 
 /* ── KPI Strip ── */
@@ -146,13 +221,15 @@ body::after {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 13px 15px;
   position: relative; overflow: hidden;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.3s;
 }
 .kpi::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
   background: var(--accent, var(--teal));
   opacity: 0.7;
+  transition: opacity 0.3s;
 }
+[data-theme="neon"] .kpi::before { opacity: 1; box-shadow: 0 0 8px var(--accent, var(--teal)); }
 .kpi:hover { border-color: var(--border2); }
 .kpi-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); margin-bottom: 5px; }
 .kpi-value { font-family: var(--font-hdr); font-size: 28px; letter-spacing: 1px; color: #e8eeff; line-height: 1; }
@@ -166,7 +243,6 @@ body::after {
   gap: 10px; margin-bottom: 10px;
 }
 .span2 { grid-column: span 2; }
-
 .bottom-grid {
   display: grid; grid-template-columns: 1fr 210px; gap: 10px;
   margin-bottom: 10px;
@@ -176,7 +252,9 @@ body::after {
 .card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 14px 16px;
+  transition: background 0.3s, border-color 0.3s;
 }
+[data-theme="neon"] .card:hover { border-color: rgba(0,245,212,0.18); }
 .card-title {
   font-family: var(--font-ui, var(--font-mono));
   font-size: 10px; font-weight: 600; letter-spacing: 2px;
@@ -191,6 +269,7 @@ body::after {
 .gauge-wrap { position: relative; width: 140px; height: 140px; margin: 6px auto 14px; }
 .gauge-wrap svg { transform: rotate(-90deg); }
 .gauge-bg   { fill: none; stroke: rgba(180,195,230,0.07); stroke-width: 9; }
+[data-theme="neon"] .gauge-bg { stroke: rgba(0,245,212,0.06); }
 .gauge-fill { fill: none; stroke-width: 9; stroke-linecap: round; }
 .gauge-center {
   position: absolute; inset: 0;
@@ -204,7 +283,9 @@ body::after {
 .tier-badge {
   border: 1px solid; border-radius: 7px; padding: 7px 10px;
   display: flex; justify-content: space-between; align-items: center;
+  transition: all 0.3s;
 }
+[data-theme="neon"] .tier-badge { box-shadow: inset 0 0 12px rgba(0,0,0,0.3); }
 .tier-name  { font-size: 10px; letter-spacing: 1px; font-weight: 600; }
 .tier-count { font-size: 9px; color: var(--dim); }
 .tier-cost  { font-size: 10px; font-weight: 600; }
@@ -228,6 +309,9 @@ body::after {
 td.num { text-align: right; }
 td.dim { color: var(--dim); }
 .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+[data-theme="neon"] .dot { box-shadow: 0 0 5px currentColor; }
+.tok-cell { white-space: nowrap; }
+.tok-breakdown { font-size: 9px; color: var(--dim); margin-left: 4px; letter-spacing: 0.5px; }
 .model-name { font-size: 11px; vertical-align: middle; }
 .pill { display: inline-block; padding: 2px 6px; border-radius: 20px; font-size: 10px; font-weight: 600; }
 
@@ -241,6 +325,87 @@ td.dim { color: var(--dim); }
 </style>
 </head>
 <body>
+
+<script>
+// ── Theme engine (runs before sections render) ──────────────────────────────
+window.CHARTS = {};
+
+window.applyTheme = function(theme, save) {
+  const neon = theme === 'neon';
+  document.documentElement.setAttribute('data-theme', theme);
+  if (save) localStorage.setItem('blockrun-theme', theme);
+
+  const btn = document.getElementById('theme-toggle');
+  if (btn) {
+    btn.querySelector('.theme-toggle-icon').textContent = neon ? '◎' : '◈';
+    btn.querySelector('.theme-toggle-label').textContent = neon ? 'Pastel' : 'Neon';
+  }
+
+  const grid   = neon ? 'rgba(0,245,212,0.06)'  : 'rgba(180,190,220,0.07)';
+  const tick   = neon ? '#3a4d6a'                : '#7a86a8';
+  const legend = neon ? '#5a7090'                : '#a8b4cc';
+  const bbg    = neon ? 'rgba(58,77,106,0.3)'   : 'rgba(120,130,160,0.25)';
+  const bbd    = neon ? 'rgba(58,77,106,0.7)'   : 'rgba(120,130,160,0.6)';
+  const sbg    = neon ? 'rgba(0,245,212,0.1)'   : 'rgba(110,231,223,0.1)';
+  const sbd    = neon ? '#00f5d4'                : '#6ee7df';
+  const lbg    = neon ? 'rgba(255,183,0,0.18)'  : 'rgba(245,201,126,0.2)';
+  const lbd    = neon ? '#ffb700'                : '#f5c97e';
+
+  Object.values(window.CHARTS).forEach(reg => {
+    const ch = reg.chart;
+    const colors = neon ? reg.neon.colors : reg.pastel.colors;
+    const soft   = neon ? reg.neon.soft   : reg.pastel.soft;
+
+    if (reg.role === 'donut') {
+      ch.data.datasets[0].borderColor     = colors;
+      ch.data.datasets[0].backgroundColor = soft;
+      ch.options.plugins.legend.labels.color = legend;
+
+    } else if (reg.role === 'bar') {
+      ch.data.datasets[0].backgroundColor = bbg;
+      ch.data.datasets[0].borderColor     = bbd;
+      ch.data.datasets[1].backgroundColor = soft;
+      ch.data.datasets[1].borderColor     = colors;
+      ch.data.datasets[2].backgroundColor = sbg;
+      ch.data.datasets[2].borderColor     = sbd;
+      ch.options.plugins.legend.labels.color   = legend;
+      ch.options.scales.x.grid.color           = grid;
+      ch.options.scales.x.ticks.color          = tick;
+      ch.options.scales.y.grid.color           = grid;
+      ch.options.scales.y.ticks.color          = tick;
+
+    } else if (reg.role === 'tl') {
+      const ds = neon ? reg.neon.tl : reg.pastel.tl;
+      ds.forEach((d, i) => {
+        if (ch.data.datasets[i]) {
+          ch.data.datasets[i].borderColor     = d.borderColor;
+          ch.data.datasets[i].backgroundColor = d.backgroundColor;
+        }
+      });
+      ch.options.plugins.legend.labels.color   = legend;
+      ch.options.scales.x.grid.color           = grid;
+      ch.options.scales.x.ticks.color          = tick;
+      ch.options.scales.y.grid.color           = grid;
+      ch.options.scales.y.ticks.color          = tick;
+
+    } else if (reg.role === 'lat') {
+      ch.data.datasets[0].backgroundColor = lbg;
+      ch.data.datasets[0].borderColor     = lbd;
+      ch.options.scales.x.grid.color      = grid;
+      ch.options.scales.x.ticks.color     = tick;
+      ch.options.scales.y.grid.color      = grid;
+      ch.options.scales.y.ticks.color     = tick;
+    }
+
+    ch.update('none');
+  });
+};
+
+// Restore saved theme (before sections create their charts)
+const _saved = localStorage.getItem('blockrun-theme') || 'pastel';
+if (_saved !== 'pastel') document.documentElement.setAttribute('data-theme', _saved);
+</script>
+
 <div class="layout">
 
   <!-- ── Sidebar ── -->
@@ -253,20 +418,24 @@ td.dim { color: var(--dim); }
     <div class="nav-section-label">Overview</div>
     <a class="nav-link global-link" href="#global">
       <span class="nav-date">All Days</span>
-      <span class="nav-meta">558 req · $9.452</span>
+      <span class="nav-meta">450 req · $6.761</span>
     </a>
 
     <div class="nav-section-label">Daily</div>
     <a class="nav-link" href="#day-2026-02-25"><span class="nav-date">2026-02-25</span><span class="nav-meta">290 req · $2.681</span></a>
-<a class="nav-link" href="#day-2026-02-24"><span class="nav-date">2026-02-24</span><span class="nav-meta">68 req · $1.923</span></a>
-<a class="nav-link" href="#day-2026-02-23"><span class="nav-date">2026-02-23</span><span class="nav-meta">119 req · $2.853</span></a>
-<a class="nav-link" href="#day-2026-02-22"><span class="nav-date">2026-02-22</span><span class="nav-meta">81 req · $1.996</span></a>
+<a class="nav-link" href="#day-2026-02-24"><span class="nav-date">2026-02-24</span><span class="nav-meta">80 req · $1.998</span></a>
+<a class="nav-link" href="#day-2026-02-23"><span class="nav-date">2026-02-23</span><span class="nav-meta">80 req · $2.082</span></a>
 
 
     <div class="sidebar-footer">
-      4 day(s) ingested<br>
-      Generated 2026-02-25 17:12:08<br>
+      3 day(s) ingested<br>
+      Generated 2026-02-26 06:47:14<br>
       BlockRun Intelligence
+      <button class="theme-toggle" id="theme-toggle"
+        onclick="applyTheme(document.documentElement.getAttribute('data-theme')==='neon'?'pastel':'neon', true)">
+        <span class="theme-toggle-icon">◈</span>
+        <span class="theme-toggle-label">Neon</span>
+      </button>
     </div>
   </nav>
 
@@ -280,11 +449,11 @@ td.dim { color: var(--dim); }
       <h2 class="section-title">Aggregated Overview — All Days</h2>
     </div>
     <div class="section-meta">
-      <span>558 requests</span>
+      <span>450 requests</span>
       <span>·</span>
       <span>3 models</span>
       <span>·</span>
-      <span>$9.4523 actual</span>
+      <span>$6.7611 actual</span>
     </div>
   </div>
 
@@ -292,26 +461,26 @@ td.dim { color: var(--dim); }
   <div class="kpi-strip">
     <div class="kpi" style="--accent:#6ee7df;">
       <div class="kpi-label">Requests</div>
-      <div class="kpi-value">558</div>
+      <div class="kpi-value">450</div>
     </div>
     <div class="kpi" style="--accent:#d4a0c8;">
       <div class="kpi-label">Actual Cost</div>
-      <div class="kpi-value">$9.4523</div>
+      <div class="kpi-value">$6.7611</div>
       <div class="kpi-sub">USD this period</div>
     </div>
     <div class="kpi" style="--accent:#8899aa;">
       <div class="kpi-label">Baseline Cost</div>
-      <div class="kpi-value">$176.15</div>
+      <div class="kpi-value">$137.26</div>
       <div class="kpi-sub">without routing</div>
     </div>
     <div class="kpi" style="--accent:#86efac;">
       <div class="kpi-label">Real Savings</div>
-      <div class="kpi-value">$166.70</div>
+      <div class="kpi-value">$130.50</div>
       <div class="kpi-sub">baseline − actual</div>
     </div>
     <div class="kpi" style="--accent:#f5c97e;">
       <div class="kpi-label">Avg Latency</div>
-      <div class="kpi-value">8887<span style="font-size:14px;"> ms</span></div>
+      <div class="kpi-value">8346<span style="font-size:14px;"> ms</span></div>
     </div>
   </div>
 
@@ -325,7 +494,7 @@ td.dim { color: var(--dim); }
         <svg width="140" height="140" viewBox="0 0 140 140">
           <circle class="gauge-bg"   cx="70" cy="70" r="54"/>
           <circle class="gauge-fill" cx="70" cy="70" r="54"
-            style="stroke:#6ee7df;stroke-dasharray:321.09 18.21;filter:drop-shadow(0 0 6px #6ee7df)90;"/>
+            style="stroke:#6ee7df;stroke-dasharray:322.59 16.71;filter:drop-shadow(0 0 6px #6ee7df)90;"/>
         </svg>
         <div class="gauge-center">
           <div class="gauge-pct" style="color:#6ee7df;text-shadow:0 0 14px #6ee7df66;">95%</div>
@@ -333,9 +502,9 @@ td.dim { color: var(--dim); }
         </div>
       </div>
       <div class="card-title" style="text-align:center;margin-top:4px;">Routing Tiers</div>
-      <div class="tier-badges"><div class="tier-badge" style="border-color:rgba(212,160,200,0.4);background:rgba(212,160,200,0.07);"><span class="tier-name" style="color:#d4a0c8;">DIRECT</span><span class="tier-count">157 req</span><span class="tier-cost" style="color:#d4a0c8;">$2.2136</span></div>
-<div class="tier-badge" style="border-color:rgba(245,201,126,0.4);background:rgba(245,201,126,0.07);"><span class="tier-name" style="color:#f5c97e;">MEDIUM</span><span class="tier-count">240 req</span><span class="tier-cost" style="color:#f5c97e;">$5.0281</span></div>
-<div class="tier-badge" style="border-color:rgba(110,231,223,0.4);background:rgba(110,231,223,0.07);"><span class="tier-name" style="color:#6ee7df;">SIMPLE</span><span class="tier-count">161 req</span><span class="tier-cost" style="color:#6ee7df;">$2.2106</span></div></div>
+      <div class="tier-badges"><div class="tier-badge" style="border-color:rgba(212,160,200,0.4);background:rgba(212,160,200,0.07);"><span class="tier-name" style="color:#d4a0c8;">DIRECT</span><span class="tier-count">119 req</span><span class="tier-cost" style="color:#d4a0c8;">$1.2776</span></div>
+<div class="tier-badge" style="border-color:rgba(245,201,126,0.4);background:rgba(245,201,126,0.07);"><span class="tier-name" style="color:#f5c97e;">MEDIUM</span><span class="tier-count">201 req</span><span class="tier-cost" style="color:#f5c97e;">$4.0914</span></div>
+<div class="tier-badge" style="border-color:rgba(110,231,223,0.4);background:rgba(110,231,223,0.07);"><span class="tier-name" style="color:#6ee7df;">SIMPLE</span><span class="tier-count">130 req</span><span class="tier-cost" style="color:#6ee7df;">$1.3921</span></div></div>
     </div>
 
     <!-- Bar chart -->
@@ -375,9 +544,9 @@ td.dim { color: var(--dim); }
             <th>Baseline</th><th>Saved</th><th>Rate</th><th>Avg Lat</th>
           </tr>
         </thead>
-        <tbody><tr><td><span class="dot" style="background:#d4a0c8;box-shadow:0 0 6px rgba(212,160,200,0.7);"></span><span class="model-name">grok-code-fast-1</span></td><td class="num">225</td><td class="num">$4.6736</td><td class="num dim">$87.3556</td><td class="num" style="color:#d4a0c8;">$82.6820</td><td class="num"><span class="pill" style="background:rgba(212,160,200,0.12);color:#d4a0c8;border:1px solid rgba(212,160,200,0.3);">94.6%</span></td><td class="num dim">12631 ms</td></tr>
-<tr><td><span class="dot" style="background:#f5c97e;box-shadow:0 0 6px rgba(245,201,126,0.7);"></span><span class="model-name">kimi-k2.5</span></td><td class="num">104</td><td class="num">$2.6777</td><td class="num dim">$38.0047</td><td class="num" style="color:#f5c97e;">$35.3270</td><td class="num"><span class="pill" style="background:rgba(245,201,126,0.12);color:#f5c97e;border:1px solid rgba(245,201,126,0.3);">93.0%</span></td><td class="num dim">9645 ms</td></tr>
-<tr><td><span class="dot" style="background:#6ee7df;box-shadow:0 0 6px rgba(110,231,223,0.7);"></span><span class="model-name">gpt-oss-120b</span></td><td class="num">229</td><td class="num">$2.1010</td><td class="num dim">$50.7874</td><td class="num" style="color:#6ee7df;">$48.6864</td><td class="num"><span class="pill" style="background:rgba(110,231,223,0.12);color:#6ee7df;border:1px solid rgba(110,231,223,0.3);">95.9%</span></td><td class="num dim">4864 ms</td></tr></tbody>
+        <tbody><tr><td><span class="dot" style="background:#d4a0c8;box-shadow:0 0 6px rgba(212,160,200,0.7);"></span><span class="model-name">grok-code-fast-1</span></td><td class="num">205</td><td class="num">$4.1543</td><td class="num dim">$79.6579</td><td class="num" style="color:#d4a0c8;">$75.5036</td><td class="num"><span class="pill" style="background:rgba(212,160,200,0.12);color:#d4a0c8;border:1px solid rgba(212,160,200,0.3);">94.8%</span></td><td class="num dim">12496 ms</td></tr>
+<tr><td><span class="dot" style="background:#f5c97e;box-shadow:0 0 6px rgba(245,201,126,0.7);"></span><span class="model-name">gpt-oss-120b</span></td><td class="num">198</td><td class="num">$1.3965</td><td class="num dim">$39.9834</td><td class="num" style="color:#f5c97e;">$38.5869</td><td class="num"><span class="pill" style="background:rgba(245,201,126,0.12);color:#f5c97e;border:1px solid rgba(245,201,126,0.3);">96.5%</span></td><td class="num dim">3747 ms</td></tr>
+<tr><td><span class="dot" style="background:#6ee7df;box-shadow:0 0 6px rgba(110,231,223,0.7);"></span><span class="model-name">kimi-k2.5</span></td><td class="num">47</td><td class="num">$1.2103</td><td class="num dim">$17.6181</td><td class="num" style="color:#6ee7df;">$16.4078</td><td class="num"><span class="pill" style="background:rgba(110,231,223,0.12);color:#6ee7df;border:1px solid rgba(110,231,223,0.3);">93.1%</span></td><td class="num dim">9622 ms</td></tr></tbody>
       </table>
     </div>
     <div class="card">
@@ -392,84 +561,125 @@ td.dim { color: var(--dim); }
 
 <script>
 (function() {
-  const COLORS  = ["#d4a0c8", "#f5c97e", "#6ee7df"];
-  const SOFT    = ["rgba(212,160,200,0.18)", "rgba(245,201,126,0.18)", "rgba(110,231,223,0.18)"];
-  const BCOLORS = ["#d4a0c8", "#f5c97e", "#6ee7df"];
-  const BSOFT   = ["rgba(212,160,200,0.18)", "rgba(245,201,126,0.18)", "rgba(110,231,223,0.18)"];
-  const gridColor = 'rgba(180,190,220,0.07)';
-  const tickColor = '#7a86a8';
-  const legendColor = '#a8b4cc';
+  window.CHARTS = window.CHARTS || {};
+  const isNeon  = () => document.documentElement.getAttribute('data-theme') === 'neon';
 
-  new Chart(document.getElementById('global_donutChart'), {
+  // Both palettes for this section
+  const P_COLORS = ["#d4a0c8", "#f5c97e", "#6ee7df"];
+  const P_SOFT   = ["rgba(212,160,200,0.18)", "rgba(245,201,126,0.18)", "rgba(110,231,223,0.18)"];
+  const N_COLORS = ["#ff3cac", "#ffb700", "#00f5d4"];
+  const N_SOFT   = ["rgba(255,60,172,0.2)", "rgba(255,183,0,0.2)", "rgba(0,245,212,0.2)"];
+  const PB_COLORS = ["#d4a0c8", "#f5c97e", "#6ee7df"];
+  const PB_SOFT   = ["rgba(212,160,200,0.18)", "rgba(245,201,126,0.18)", "rgba(110,231,223,0.18)"];
+  const NB_COLORS = ["#ff3cac", "#ffb700", "#00f5d4"];
+  const NB_SOFT   = ["rgba(255,60,172,0.2)", "rgba(255,183,0,0.2)", "rgba(0,245,212,0.2)"];
+  const TL_PASTEL = [{"label": "grok-code-fast-1", "data": [0.867627, 0.686151, 2.600573], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)"}, {"label": "gpt-oss-120b", "data": [0.754784, 0.641698, 0.0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)"}, {"label": "kimi-k2.5", "data": [0.459515, 0.67036, 0.080394], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)"}];
+  const TL_NEON   = [{"label": "grok-code-fast-1", "data": [0.867627, 0.686151, 2.600573], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#ff3cac", "backgroundColor": "rgba(255,60,172,0.2)"}, {"label": "gpt-oss-120b", "data": [0.754784, 0.641698, 0.0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#ffb700", "backgroundColor": "rgba(255,183,0,0.2)"}, {"label": "kimi-k2.5", "data": [0.459515, 0.67036, 0.080394], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#00f5d4", "backgroundColor": "rgba(0,245,212,0.2)"}];
+
+  const themeColors = () => {
+    const neon = isNeon();
+    return {
+      grid:           neon ? 'rgba(0,245,212,0.06)'   : 'rgba(180,190,220,0.07)',
+      tick:           neon ? '#3a4d6a'                 : '#7a86a8',
+      legend:         neon ? '#5a7090'                 : '#a8b4cc',
+      baselineBg:     neon ? 'rgba(58,77,106,0.3)'    : 'rgba(120,130,160,0.25)',
+      baselineBorder: neon ? 'rgba(58,77,106,0.7)'    : 'rgba(120,130,160,0.6)',
+      savingsBg:      neon ? 'rgba(0,245,212,0.1)'    : 'rgba(110,231,223,0.1)',
+      savingsBorder:  neon ? '#00f5d4'                 : '#6ee7df',
+      latBg:          neon ? 'rgba(255,183,0,0.18)'   : 'rgba(245,201,126,0.2)',
+      latBorder:      neon ? '#ffb700'                 : '#f5c97e',
+      modelColors:    neon ? N_COLORS : P_COLORS,
+      modelSoft:      neon ? N_SOFT   : P_SOFT,
+      barColors:      neon ? NB_COLORS : PB_COLORS,
+      barSoft:        neon ? NB_SOFT   : PB_SOFT,
+    };
+  };
+
+  const tc = themeColors();
+
+  // ── Donut ──
+  const donut = new Chart(document.getElementById('global_donutChart'), {
     type: 'doughnut',
     data: {
-      labels: ["grok-code-fast-1", "kimi-k2.5", "gpt-oss-120b"],
-      datasets: [{ data: [4.67364, 2.677654, 2.100977], backgroundColor: SOFT, borderColor: COLORS, borderWidth: 1.5, hoverOffset: 5 }]
+      labels: ["grok-code-fast-1", "gpt-oss-120b", "kimi-k2.5"],
+      datasets: [{ data: [4.15435, 1.396482, 1.210269], backgroundColor: tc.modelSoft, borderColor: tc.modelColors, borderWidth: 1.5, hoverOffset: 5 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '68%',
       plugins: {
-        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: tc.legend } },
         tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.toFixed(6) } }
       }
     }
   });
+  window.CHARTS['global_donutChart'] = { chart: donut, role: 'donut',
+    pastel: { colors: P_COLORS, soft: P_SOFT }, neon: { colors: N_COLORS, soft: N_SOFT } };
 
-  new Chart(document.getElementById('global_barChart'), {
+  // ── Bar ──
+  const bar = new Chart(document.getElementById('global_barChart'), {
     type: 'bar',
     data: {
-      labels: ["grok-code-fast-1", "kimi-k2.5", "gpt-oss-120b"],
+      labels: ["grok-code-fast-1", "gpt-oss-120b", "kimi-k2.5"],
       datasets: [
-        { label: 'Baseline', data: [87.3556, 38.0047, 50.7874], backgroundColor: 'rgba(120,130,160,0.25)', borderColor: 'rgba(120,130,160,0.6)', borderWidth: 1, borderRadius: 4 },
-        { label: 'Actual Cost', data: [4.6736, 2.6777, 2.101], backgroundColor: BSOFT, borderColor: BCOLORS, borderWidth: 1.5, borderRadius: 4 },
-        { label: 'Savings', data: [82.682, 35.327, 48.6864], backgroundColor: 'rgba(110,231,223,0.1)', borderColor: '#6ee7df', borderWidth: 1, borderRadius: 4 }
+        { label: 'Baseline',    data: [79.6579, 39.9834, 17.6181], backgroundColor: tc.baselineBg, borderColor: tc.baselineBorder, borderWidth: 1, borderRadius: 4 },
+        { label: 'Actual Cost', data: [4.1543, 1.3965, 1.2103],     backgroundColor: tc.barSoft, borderColor: tc.barColors, borderWidth: 1.5, borderRadius: 4 },
+        { label: 'Savings',     data: [75.5036, 38.5869, 16.4078],  backgroundColor: tc.savingsBg, borderColor: tc.savingsBorder, borderWidth: 1, borderRadius: 4 }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: legendColor } },
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: tc.legend } },
         tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(4) } }
       },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 0 } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => '$' + v.toFixed(1) } }
+        x: { grid: { color: tc.grid }, ticks: { color: tc.tick, maxRotation: 0 } },
+        y: { grid: { color: tc.grid }, ticks: { color: tc.tick, callback: v => '$' + v.toFixed(1) } }
       }
     }
   });
+  window.CHARTS['global_barChart'] = { chart: bar, role: 'bar',
+    pastel: { colors: PB_COLORS, soft: PB_SOFT }, neon: { colors: NB_COLORS, soft: NB_SOFT } };
 
-  new Chart(document.getElementById('global_tlChart'), {
+  // ── Timeline ──
+  const tlData = isNeon() ? TL_NEON : TL_PASTEL;
+  const tl = new Chart(document.getElementById('global_tlChart'), {
     type: 'line',
-    data: { labels: ["02-22", "02-23", "02-24", "02-25"], datasets: [{"label": "grok-code-fast-1", "data": [0.620962, 0.787636, 0.664469, 2.600573], "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "kimi-k2.5", "data": [0.605987, 1.226873, 0.7644, 0.080394], "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "gpt-oss-120b", "data": [0.768738, 0.838525, 0.493714, 0.0], "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}] },
+    data: { labels: ["02-23", "02-24", "02-25"], datasets: tlData },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: tc.legend } },
         tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) } }
       },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 18, maxRotation: 0 } },
-        y: { grid: { color: gridColor }, stacked: true, ticks: { color: tickColor, callback: v => '$' + v.toFixed(4) } }
+        x: { grid: { color: tc.grid }, ticks: { color: tc.tick, maxTicksLimit: 18, maxRotation: 0 } },
+        y: { grid: { color: tc.grid }, stacked: true, ticks: { color: tc.tick, callback: v => '$' + v.toFixed(4) } }
       }
     }
   });
+  window.CHARTS['global_tlChart'] = { chart: tl, role: 'tl',
+    pastel: { tl: TL_PASTEL }, neon: { tl: TL_NEON } };
 
-  new Chart(document.getElementById('global_latChart'), {
+  // ── Latency ──
+  const lat = new Chart(document.getElementById('global_latChart'), {
     type: 'bar',
     data: {
       labels: ["0-2s", "2-4s", "4-6s", "6-8s", "8-10s", "10-12s", "12-14s", "14-16s", "16-18s", "18s+"],
-      datasets: [{ label: 'Requests', data: [105, 77, 48, 53, 34, 49, 44, 43, 49, 56], backgroundColor: 'rgba(245,201,126,0.2)', borderColor: '#f5c97e', borderWidth: 1, borderRadius: 3 }]
+      datasets: [{ label: 'Requests', data: [99, 61, 37, 40, 36, 42, 32, 36, 35, 32], backgroundColor: tc.latBg, borderColor: tc.latBorder, borderWidth: 1, borderRadius: 3 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 45, font: { size: 9 } } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+        x: { grid: { color: tc.grid }, ticks: { color: tc.tick, maxRotation: 45, font: { size: 9 } } },
+        y: { grid: { color: tc.grid }, ticks: { color: tc.tick } }
       }
     }
   });
+  window.CHARTS['global_latChart'] = { chart: lat, role: 'lat' };
+
 })();
 </script>
 
@@ -593,84 +803,125 @@ td.dim { color: var(--dim); }
 
 <script>
 (function() {
-  const COLORS  = ["#6ee7df", "#f5c97e", "#d4a0c8"];
-  const SOFT    = ["rgba(110,231,223,0.18)", "rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)"];
-  const BCOLORS = ["#6ee7df", "#f5c97e", "#d4a0c8"];
-  const BSOFT   = ["rgba(110,231,223,0.18)", "rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)"];
-  const gridColor = 'rgba(180,190,220,0.07)';
-  const tickColor = '#7a86a8';
-  const legendColor = '#a8b4cc';
+  window.CHARTS = window.CHARTS || {};
+  const isNeon  = () => document.documentElement.getAttribute('data-theme') === 'neon';
 
-  new Chart(document.getElementById('day_2026_02_25_donutChart'), {
+  // Both palettes for this section
+  const P_COLORS = ["#6ee7df", "#f5c97e", "#d4a0c8"];
+  const P_SOFT   = ["rgba(110,231,223,0.18)", "rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)"];
+  const N_COLORS = ["#00f5d4", "#ffb700", "#ff3cac"];
+  const N_SOFT   = ["rgba(0,245,212,0.2)", "rgba(255,183,0,0.2)", "rgba(255,60,172,0.2)"];
+  const PB_COLORS = ["#6ee7df", "#f5c97e", "#d4a0c8"];
+  const PB_SOFT   = ["rgba(110,231,223,0.18)", "rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)"];
+  const NB_COLORS = ["#00f5d4", "#ffb700", "#ff3cac"];
+  const NB_SOFT   = ["rgba(0,245,212,0.2)", "rgba(255,183,0,0.2)", "rgba(255,60,172,0.2)"];
+  const TL_PASTEL = [{"label": "grok-code-fast-1", "data": [0.030707, 0.020692, 0.031461, 0.031827, 0, 0.021597, 0.046689, 0.012226, 0, 0.024765, 0.050213, 0, 0, 0, 0, 0, 0.012565, 0.025312, 0.052214, 0.013452, 0.02712, 0.027602, 0.030139, 0.030342, 0.01537, 0.046538, 0.079486, 0.101075, 0.069249, 0.017576, 0.053569, 0.053519, 0.017714, 0.071331, 0, 0.017982, 0.091658, 0.093396, 0.056428, 0, 0, 0.09823, 0.0793, 0.069444, 0.116571, 0.094386, 0.023721, 0.072075, 0.097661, 0.099432, 0.07569, 0.07627, 0, 0, 0, 0, 0, 0, 0, 0.025513, 0.102396, 0.05144, 0.130231, 0.052999, 0.026842, 0, 0.034557], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)"}, {"label": "kimi-k2.5", "data": [0, 0, 0, 0, 0.024818, 0, 0.026003, 0, 0.029573, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)"}, {"label": "gpt-oss-120b", "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0, 0, 0, 0.0, 0.0, 0, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0.0, 0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)"}];
+  const TL_NEON   = [{"label": "grok-code-fast-1", "data": [0.030707, 0.020692, 0.031461, 0.031827, 0, 0.021597, 0.046689, 0.012226, 0, 0.024765, 0.050213, 0, 0, 0, 0, 0, 0.012565, 0.025312, 0.052214, 0.013452, 0.02712, 0.027602, 0.030139, 0.030342, 0.01537, 0.046538, 0.079486, 0.101075, 0.069249, 0.017576, 0.053569, 0.053519, 0.017714, 0.071331, 0, 0.017982, 0.091658, 0.093396, 0.056428, 0, 0, 0.09823, 0.0793, 0.069444, 0.116571, 0.094386, 0.023721, 0.072075, 0.097661, 0.099432, 0.07569, 0.07627, 0, 0, 0, 0, 0, 0, 0, 0.025513, 0.102396, 0.05144, 0.130231, 0.052999, 0.026842, 0, 0.034557], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#00f5d4", "backgroundColor": "rgba(0,245,212,0.2)"}, {"label": "kimi-k2.5", "data": [0, 0, 0, 0, 0.024818, 0, 0.026003, 0, 0.029573, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#ffb700", "backgroundColor": "rgba(255,183,0,0.2)"}, {"label": "gpt-oss-120b", "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0, 0, 0, 0.0, 0.0, 0, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0.0, 0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#ff3cac", "backgroundColor": "rgba(255,60,172,0.2)"}];
+
+  const themeColors = () => {
+    const neon = isNeon();
+    return {
+      grid:           neon ? 'rgba(0,245,212,0.06)'   : 'rgba(180,190,220,0.07)',
+      tick:           neon ? '#3a4d6a'                 : '#7a86a8',
+      legend:         neon ? '#5a7090'                 : '#a8b4cc',
+      baselineBg:     neon ? 'rgba(58,77,106,0.3)'    : 'rgba(120,130,160,0.25)',
+      baselineBorder: neon ? 'rgba(58,77,106,0.7)'    : 'rgba(120,130,160,0.6)',
+      savingsBg:      neon ? 'rgba(0,245,212,0.1)'    : 'rgba(110,231,223,0.1)',
+      savingsBorder:  neon ? '#00f5d4'                 : '#6ee7df',
+      latBg:          neon ? 'rgba(255,183,0,0.18)'   : 'rgba(245,201,126,0.2)',
+      latBorder:      neon ? '#ffb700'                 : '#f5c97e',
+      modelColors:    neon ? N_COLORS : P_COLORS,
+      modelSoft:      neon ? N_SOFT   : P_SOFT,
+      barColors:      neon ? NB_COLORS : PB_COLORS,
+      barSoft:        neon ? NB_SOFT   : PB_SOFT,
+    };
+  };
+
+  const tc = themeColors();
+
+  // ── Donut ──
+  const donut = new Chart(document.getElementById('day_2026_02_25_donutChart'), {
     type: 'doughnut',
     data: {
       labels: ["grok-code-fast-1", "kimi-k2.5", "gpt-oss-120b"],
-      datasets: [{ data: [2.600573, 0.080394, 0.0], backgroundColor: SOFT, borderColor: COLORS, borderWidth: 1.5, hoverOffset: 5 }]
+      datasets: [{ data: [2.600573, 0.080394, 0.0], backgroundColor: tc.modelSoft, borderColor: tc.modelColors, borderWidth: 1.5, hoverOffset: 5 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '68%',
       plugins: {
-        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: tc.legend } },
         tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.toFixed(6) } }
       }
     }
   });
+  window.CHARTS['day_2026_02_25_donutChart'] = { chart: donut, role: 'donut',
+    pastel: { colors: P_COLORS, soft: P_SOFT }, neon: { colors: N_COLORS, soft: N_SOFT } };
 
-  new Chart(document.getElementById('day_2026_02_25_barChart'), {
+  // ── Bar ──
+  const bar = new Chart(document.getElementById('day_2026_02_25_barChart'), {
     type: 'bar',
     data: {
       labels: ["grok-code-fast-1", "kimi-k2.5", "gpt-oss-120b"],
       datasets: [
-        { label: 'Baseline', data: [56.3513, 0.6699, 19.0362], backgroundColor: 'rgba(120,130,160,0.25)', borderColor: 'rgba(120,130,160,0.6)', borderWidth: 1, borderRadius: 4 },
-        { label: 'Actual Cost', data: [2.6006, 0.0804, 0.0], backgroundColor: BSOFT, borderColor: BCOLORS, borderWidth: 1.5, borderRadius: 4 },
-        { label: 'Savings', data: [53.7507, 0.5896, 19.0362], backgroundColor: 'rgba(110,231,223,0.1)', borderColor: '#6ee7df', borderWidth: 1, borderRadius: 4 }
+        { label: 'Baseline',    data: [56.3513, 0.6699, 19.0362], backgroundColor: tc.baselineBg, borderColor: tc.baselineBorder, borderWidth: 1, borderRadius: 4 },
+        { label: 'Actual Cost', data: [2.6006, 0.0804, 0.0],     backgroundColor: tc.barSoft, borderColor: tc.barColors, borderWidth: 1.5, borderRadius: 4 },
+        { label: 'Savings',     data: [53.7507, 0.5896, 19.0362],  backgroundColor: tc.savingsBg, borderColor: tc.savingsBorder, borderWidth: 1, borderRadius: 4 }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: legendColor } },
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: tc.legend } },
         tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(4) } }
       },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 0 } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => '$' + v.toFixed(1) } }
+        x: { grid: { color: tc.grid }, ticks: { color: tc.tick, maxRotation: 0 } },
+        y: { grid: { color: tc.grid }, ticks: { color: tc.tick, callback: v => '$' + v.toFixed(1) } }
       }
     }
   });
+  window.CHARTS['day_2026_02_25_barChart'] = { chart: bar, role: 'bar',
+    pastel: { colors: PB_COLORS, soft: PB_SOFT }, neon: { colors: NB_COLORS, soft: NB_SOFT } };
 
-  new Chart(document.getElementById('day_2026_02_25_tlChart'), {
+  // ── Timeline ──
+  const tlData = isNeon() ? TL_NEON : TL_PASTEL;
+  const tl = new Chart(document.getElementById('day_2026_02_25_tlChart'), {
     type: 'line',
-    data: { labels: ["07:41", "07:42", "07:47", "07:48", "07:52", "07:55", "07:56", "07:57", "07:59", "08:02", "08:03", "08:05", "10:41", "11:21", "11:22", "11:23", "11:25", "11:26", "11:27", "11:28", "11:29", "11:45", "11:46", "11:47", "12:58", "13:04", "13:05", "13:06", "13:07", "13:08", "13:12", "13:13", "13:15", "13:16", "13:17", "13:18", "13:23", "13:24", "13:25", "13:27", "13:28", "13:30", "13:37", "13:38", "13:44", "13:48", "13:50", "13:51", "13:52", "13:53", "13:54", "13:55", "14:00", "14:01", "14:02", "14:03", "14:04", "14:09", "14:10", "14:11", "14:12", "14:13", "14:14", "14:15", "14:16", "14:47", "16:51"], datasets: [{"label": "grok-code-fast-1", "data": [0.030707, 0.020692, 0.031461, 0.031827, 0, 0.021597, 0.046689, 0.012226, 0, 0.024765, 0.050213, 0, 0, 0, 0, 0, 0.012565, 0.025312, 0.052214, 0.013452, 0.02712, 0.027602, 0.030139, 0.030342, 0.01537, 0.046538, 0.079486, 0.101075, 0.069249, 0.017576, 0.053569, 0.053519, 0.017714, 0.071331, 0, 0.017982, 0.091658, 0.093396, 0.056428, 0, 0, 0.09823, 0.0793, 0.069444, 0.116571, 0.094386, 0.023721, 0.072075, 0.097661, 0.099432, 0.07569, 0.07627, 0, 0, 0, 0, 0, 0, 0, 0.025513, 0.102396, 0.05144, 0.130231, 0.052999, 0.026842, 0, 0.034557], "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "kimi-k2.5", "data": [0, 0, 0, 0, 0.024818, 0, 0.026003, 0, 0.029573, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "gpt-oss-120b", "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0, 0, 0, 0.0, 0.0, 0, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0.0, 0], "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}] },
+    data: { labels: ["07:41", "07:42", "07:47", "07:48", "07:52", "07:55", "07:56", "07:57", "07:59", "08:02", "08:03", "08:05", "10:41", "11:21", "11:22", "11:23", "11:25", "11:26", "11:27", "11:28", "11:29", "11:45", "11:46", "11:47", "12:58", "13:04", "13:05", "13:06", "13:07", "13:08", "13:12", "13:13", "13:15", "13:16", "13:17", "13:18", "13:23", "13:24", "13:25", "13:27", "13:28", "13:30", "13:37", "13:38", "13:44", "13:48", "13:50", "13:51", "13:52", "13:53", "13:54", "13:55", "14:00", "14:01", "14:02", "14:03", "14:04", "14:09", "14:10", "14:11", "14:12", "14:13", "14:14", "14:15", "14:16", "14:47", "16:51"], datasets: tlData },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: tc.legend } },
         tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) } }
       },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 18, maxRotation: 0 } },
-        y: { grid: { color: gridColor }, stacked: true, ticks: { color: tickColor, callback: v => '$' + v.toFixed(4) } }
+        x: { grid: { color: tc.grid }, ticks: { color: tc.tick, maxTicksLimit: 18, maxRotation: 0 } },
+        y: { grid: { color: tc.grid }, stacked: true, ticks: { color: tc.tick, callback: v => '$' + v.toFixed(4) } }
       }
     }
   });
+  window.CHARTS['day_2026_02_25_tlChart'] = { chart: tl, role: 'tl',
+    pastel: { tl: TL_PASTEL }, neon: { tl: TL_NEON } };
 
-  new Chart(document.getElementById('day_2026_02_25_latChart'), {
+  // ── Latency ──
+  const lat = new Chart(document.getElementById('day_2026_02_25_latChart'), {
     type: 'bar',
     data: {
       labels: ["0-2s", "2-4s", "4-6s", "6-8s", "8-10s", "10-12s", "12-14s", "14-16s", "16-18s", "18s+"],
-      datasets: [{ label: 'Requests', data: [81, 42, 26, 19, 15, 23, 17, 19, 16, 32], backgroundColor: 'rgba(245,201,126,0.2)', borderColor: '#f5c97e', borderWidth: 1, borderRadius: 3 }]
+      datasets: [{ label: 'Requests', data: [81, 42, 26, 19, 15, 23, 17, 19, 16, 32], backgroundColor: tc.latBg, borderColor: tc.latBorder, borderWidth: 1, borderRadius: 3 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 45, font: { size: 9 } } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+        x: { grid: { color: tc.grid }, ticks: { color: tc.tick, maxRotation: 45, font: { size: 9 } } },
+        y: { grid: { color: tc.grid }, ticks: { color: tc.tick } }
       }
     }
   });
+  window.CHARTS['day_2026_02_25_latChart'] = { chart: lat, role: 'lat' };
+
 })();
 </script>
 
@@ -681,11 +932,11 @@ td.dim { color: var(--dim); }
       <h2 class="section-title">Daily Report · 2026-02-24</h2>
     </div>
     <div class="section-meta">
-      <span>68 requests</span>
+      <span>80 requests</span>
       <span>·</span>
       <span>3 models</span>
       <span>·</span>
-      <span>$1.9226 actual</span>
+      <span>$1.9982 actual</span>
     </div>
   </div>
 
@@ -693,26 +944,26 @@ td.dim { color: var(--dim); }
   <div class="kpi-strip">
     <div class="kpi" style="--accent:#6ee7df;">
       <div class="kpi-label">Requests</div>
-      <div class="kpi-value">68</div>
+      <div class="kpi-value">80</div>
     </div>
     <div class="kpi" style="--accent:#d4a0c8;">
       <div class="kpi-label">Actual Cost</div>
-      <div class="kpi-value">$1.9226</div>
+      <div class="kpi-value">$1.9982</div>
       <div class="kpi-sub">USD this period</div>
     </div>
     <div class="kpi" style="--accent:#8899aa;">
       <div class="kpi-label">Baseline Cost</div>
-      <div class="kpi-value">$28.58</div>
+      <div class="kpi-value">$29.97</div>
       <div class="kpi-sub">without routing</div>
     </div>
     <div class="kpi" style="--accent:#86efac;">
       <div class="kpi-label">Real Savings</div>
-      <div class="kpi-value">$26.65</div>
+      <div class="kpi-value">$27.97</div>
       <div class="kpi-sub">baseline − actual</div>
     </div>
     <div class="kpi" style="--accent:#f5c97e;">
       <div class="kpi-label">Avg Latency</div>
-      <div class="kpi-value">10498<span style="font-size:14px;"> ms</span></div>
+      <div class="kpi-value">9233<span style="font-size:14px;"> ms</span></div>
     </div>
   </div>
 
@@ -726,7 +977,7 @@ td.dim { color: var(--dim); }
         <svg width="140" height="140" viewBox="0 0 140 140">
           <circle class="gauge-bg"   cx="70" cy="70" r="54"/>
           <circle class="gauge-fill" cx="70" cy="70" r="54"
-            style="stroke:#6ee7df;stroke-dasharray:316.47 22.83;filter:drop-shadow(0 0 6px #6ee7df)90;"/>
+            style="stroke:#6ee7df;stroke-dasharray:316.68 22.62;filter:drop-shadow(0 0 6px #6ee7df)90;"/>
         </svg>
         <div class="gauge-center">
           <div class="gauge-pct" style="color:#6ee7df;text-shadow:0 0 14px #6ee7df66;">93%</div>
@@ -734,9 +985,9 @@ td.dim { color: var(--dim); }
         </div>
       </div>
       <div class="card-title" style="text-align:center;margin-top:4px;">Routing Tiers</div>
-      <div class="tier-badges"><div class="tier-badge" style="border-color:rgba(212,160,200,0.4);background:rgba(212,160,200,0.07);"><span class="tier-name" style="color:#d4a0c8;">DIRECT</span><span class="tier-count">22 req</span><span class="tier-cost" style="color:#d4a0c8;">$0.5967</span></div>
-<div class="tier-badge" style="border-color:rgba(245,201,126,0.4);background:rgba(245,201,126,0.07);"><span class="tier-name" style="color:#f5c97e;">MEDIUM</span><span class="tier-count">21 req</span><span class="tier-cost" style="color:#f5c97e;">$0.5310</span></div>
-<div class="tier-badge" style="border-color:rgba(110,231,223,0.4);background:rgba(110,231,223,0.07);"><span class="tier-name" style="color:#6ee7df;">SIMPLE</span><span class="tier-count">25 req</span><span class="tier-cost" style="color:#6ee7df;">$0.7949</span></div></div>
+      <div class="tier-badges"><div class="tier-badge" style="border-color:rgba(212,160,200,0.4);background:rgba(212,160,200,0.07);"><span class="tier-name" style="color:#d4a0c8;">DIRECT</span><span class="tier-count">20 req</span><span class="tier-cost" style="color:#d4a0c8;">$0.5188</span></div>
+<div class="tier-badge" style="border-color:rgba(245,201,126,0.4);background:rgba(245,201,126,0.07);"><span class="tier-name" style="color:#f5c97e;">MEDIUM</span><span class="tier-count">29 req</span><span class="tier-cost" style="color:#f5c97e;">$0.6530</span></div>
+<div class="tier-badge" style="border-color:rgba(110,231,223,0.4);background:rgba(110,231,223,0.07);"><span class="tier-name" style="color:#6ee7df;">SIMPLE</span><span class="tier-count">31 req</span><span class="tier-cost" style="color:#6ee7df;">$0.8264</span></div></div>
     </div>
 
     <!-- Bar chart -->
@@ -776,9 +1027,9 @@ td.dim { color: var(--dim); }
             <th>Baseline</th><th>Saved</th><th>Rate</th><th>Avg Lat</th>
           </tr>
         </thead>
-        <tbody><tr><td><span class="dot" style="background:#6ee7df;box-shadow:0 0 6px rgba(110,231,223,0.7);"></span><span class="model-name">kimi-k2.5</span></td><td class="num">26</td><td class="num">$0.7644</td><td class="num dim">$11.0798</td><td class="num" style="color:#6ee7df;">$10.3154</td><td class="num"><span class="pill" style="background:rgba(110,231,223,0.12);color:#6ee7df;border:1px solid rgba(110,231,223,0.3);">93.1%</span></td><td class="num dim">9938 ms</td></tr>
-<tr><td><span class="dot" style="background:#f5c97e;box-shadow:0 0 6px rgba(245,201,126,0.7);"></span><span class="model-name">grok-code-fast-1</span></td><td class="num">23</td><td class="num">$0.6645</td><td class="num dim">$10.3227</td><td class="num" style="color:#f5c97e;">$9.6583</td><td class="num"><span class="pill" style="background:rgba(245,201,126,0.12);color:#f5c97e;border:1px solid rgba(245,201,126,0.3);">93.6%</span></td><td class="num dim">11297 ms</td></tr>
-<tr><td><span class="dot" style="background:#d4a0c8;box-shadow:0 0 6px rgba(212,160,200,0.7);"></span><span class="model-name">gpt-oss-120b</span></td><td class="num">19</td><td class="num">$0.4937</td><td class="num dim">$7.1725</td><td class="num" style="color:#d4a0c8;">$6.6788</td><td class="num"><span class="pill" style="background:rgba(212,160,200,0.12);color:#d4a0c8;border:1px solid rgba(212,160,200,0.3);">93.1%</span></td><td class="num dim">10300 ms</td></tr></tbody>
+        <tbody><tr><td><span class="dot" style="background:#d4a0c8;box-shadow:0 0 6px rgba(212,160,200,0.7);"></span><span class="model-name">grok-code-fast-1</span></td><td class="num">33</td><td class="num">$0.6862</td><td class="num dim">$10.2923</td><td class="num" style="color:#d4a0c8;">$9.6061</td><td class="num"><span class="pill" style="background:rgba(212,160,200,0.12);color:#d4a0c8;border:1px solid rgba(212,160,200,0.3);">93.3%</span></td><td class="num dim">9395 ms</td></tr>
+<tr><td><span class="dot" style="background:#6ee7df;box-shadow:0 0 6px rgba(110,231,223,0.7);"></span><span class="model-name">kimi-k2.5</span></td><td class="num">22</td><td class="num">$0.6704</td><td class="num dim">$10.0554</td><td class="num" style="color:#6ee7df;">$9.3850</td><td class="num"><span class="pill" style="background:rgba(110,231,223,0.12);color:#6ee7df;border:1px solid rgba(110,231,223,0.3);">93.3%</span></td><td class="num dim">8563 ms</td></tr>
+<tr><td><span class="dot" style="background:#f5c97e;box-shadow:0 0 6px rgba(245,201,126,0.7);"></span><span class="model-name">gpt-oss-120b</span></td><td class="num">25</td><td class="num">$0.6417</td><td class="num dim">$9.6255</td><td class="num" style="color:#f5c97e;">$8.9838</td><td class="num"><span class="pill" style="background:rgba(245,201,126,0.12);color:#f5c97e;border:1px solid rgba(245,201,126,0.3);">93.3%</span></td><td class="num dim">9609 ms</td></tr></tbody>
       </table>
     </div>
     <div class="card">
@@ -793,84 +1044,125 @@ td.dim { color: var(--dim); }
 
 <script>
 (function() {
-  const COLORS  = ["#6ee7df", "#f5c97e", "#d4a0c8"];
-  const SOFT    = ["rgba(110,231,223,0.18)", "rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)"];
-  const BCOLORS = ["#6ee7df", "#f5c97e", "#d4a0c8"];
-  const BSOFT   = ["rgba(110,231,223,0.18)", "rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)"];
-  const gridColor = 'rgba(180,190,220,0.07)';
-  const tickColor = '#7a86a8';
-  const legendColor = '#a8b4cc';
+  window.CHARTS = window.CHARTS || {};
+  const isNeon  = () => document.documentElement.getAttribute('data-theme') === 'neon';
 
-  new Chart(document.getElementById('day_2026_02_24_donutChart'), {
+  // Both palettes for this section
+  const P_COLORS = ["#d4a0c8", "#6ee7df", "#f5c97e"];
+  const P_SOFT   = ["rgba(212,160,200,0.18)", "rgba(110,231,223,0.18)", "rgba(245,201,126,0.18)"];
+  const N_COLORS = ["#ff3cac", "#00f5d4", "#ffb700"];
+  const N_SOFT   = ["rgba(255,60,172,0.2)", "rgba(0,245,212,0.2)", "rgba(255,183,0,0.2)"];
+  const PB_COLORS = ["#d4a0c8", "#6ee7df", "#f5c97e"];
+  const PB_SOFT   = ["rgba(212,160,200,0.18)", "rgba(110,231,223,0.18)", "rgba(245,201,126,0.18)"];
+  const NB_COLORS = ["#ff3cac", "#00f5d4", "#ffb700"];
+  const NB_SOFT   = ["rgba(255,60,172,0.2)", "rgba(0,245,212,0.2)", "rgba(255,183,0,0.2)"];
+  const TL_PASTEL = [{"label": "grok-code-fast-1", "data": [0, 0.003614, 0, 0, 0.019336, 0, 0, 0.018303, 0.00069, 0.02415, 0.011649, 0.037755, 0.042961, 0.037559, 0.019271, 0, 0, 0.037551, 0.015994, 0, 0, 0.007086, 0, 0, 0.009394, 0.038568, 0.046929, 0, 0.033553, 0, 0, 0, 0, 0.015434, 0.036509, 0, 0.010478, 0, 0.024102, 0, 0.009114, 0.034748, 0, 0.00195, 0, 0, 0, 0, 0.009785, 0.014421, 0, 0.009772, 0, 0, 0, 0.015315, 0, 0, 0, 0, 0.001798, 0, 0, 0.032233, 0.032024, 0, 0, 0, 0, 0, 0, 0.005744, 0.028361], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)"}, {"label": "kimi-k2.5", "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.010219, 0, 0.036238, 0, 0, 0, 0, 0, 0.029035, 0.041597, 0, 0, 0, 0, 0, 0, 0, 0.036771, 0, 0.041491, 0, 0, 0, 0, 0, 0.065543, 0, 0.017127, 0, 0.045612, 0, 0, 0, 0, 0, 0.047846, 0, 0.042369, 0, 0, 0, 0, 0.027091, 0, 0.022325, 0, 0.048805, 0.018003, 0.041464, 0, 0, 0.006846, 0.033517, 0, 0, 0, 0, 0, 0.054927, 0.003535, 0, 0, 0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)"}, {"label": "gpt-oss-120b", "data": [0.037027, 0, 0.015624, 0.015764, 0, 0.029457, 0.047349, 0, 0, 0, 0, 0, 0, 0, 0, 0.030077, 0.028336, 0, 0, 0, 0.006563, 0, 0.039131, 0.040593, 0, 0, 0, 0, 0, 0, 0.044967, 0.026115, 0.006303, 0, 0.023963, 0, 0, 0, 0, 0, 0, 0, 0.008779, 0, 0.023459, 0, 0.034106, 0, 0, 0, 0.000736, 0, 0, 0.014297, 0, 0, 0, 0.041079, 0, 0.013981, 0, 0, 0, 0, 0, 0.02659, 0.047223, 0.00312, 0, 0, 0.03706, 0, 0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)"}];
+  const TL_NEON   = [{"label": "grok-code-fast-1", "data": [0, 0.003614, 0, 0, 0.019336, 0, 0, 0.018303, 0.00069, 0.02415, 0.011649, 0.037755, 0.042961, 0.037559, 0.019271, 0, 0, 0.037551, 0.015994, 0, 0, 0.007086, 0, 0, 0.009394, 0.038568, 0.046929, 0, 0.033553, 0, 0, 0, 0, 0.015434, 0.036509, 0, 0.010478, 0, 0.024102, 0, 0.009114, 0.034748, 0, 0.00195, 0, 0, 0, 0, 0.009785, 0.014421, 0, 0.009772, 0, 0, 0, 0.015315, 0, 0, 0, 0, 0.001798, 0, 0, 0.032233, 0.032024, 0, 0, 0, 0, 0, 0, 0.005744, 0.028361], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#ff3cac", "backgroundColor": "rgba(255,60,172,0.2)"}, {"label": "kimi-k2.5", "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.010219, 0, 0.036238, 0, 0, 0, 0, 0, 0.029035, 0.041597, 0, 0, 0, 0, 0, 0, 0, 0.036771, 0, 0.041491, 0, 0, 0, 0, 0, 0.065543, 0, 0.017127, 0, 0.045612, 0, 0, 0, 0, 0, 0.047846, 0, 0.042369, 0, 0, 0, 0, 0.027091, 0, 0.022325, 0, 0.048805, 0.018003, 0.041464, 0, 0, 0.006846, 0.033517, 0, 0, 0, 0, 0, 0.054927, 0.003535, 0, 0, 0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#00f5d4", "backgroundColor": "rgba(0,245,212,0.2)"}, {"label": "gpt-oss-120b", "data": [0.037027, 0, 0.015624, 0.015764, 0, 0.029457, 0.047349, 0, 0, 0, 0, 0, 0, 0, 0, 0.030077, 0.028336, 0, 0, 0, 0.006563, 0, 0.039131, 0.040593, 0, 0, 0, 0, 0, 0, 0.044967, 0.026115, 0.006303, 0, 0.023963, 0, 0, 0, 0, 0, 0, 0, 0.008779, 0, 0.023459, 0, 0.034106, 0, 0, 0, 0.000736, 0, 0, 0.014297, 0, 0, 0, 0.041079, 0, 0.013981, 0, 0, 0, 0, 0, 0.02659, 0.047223, 0.00312, 0, 0, 0.03706, 0, 0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#ffb700", "backgroundColor": "rgba(255,183,0,0.2)"}];
+
+  const themeColors = () => {
+    const neon = isNeon();
+    return {
+      grid:           neon ? 'rgba(0,245,212,0.06)'   : 'rgba(180,190,220,0.07)',
+      tick:           neon ? '#3a4d6a'                 : '#7a86a8',
+      legend:         neon ? '#5a7090'                 : '#a8b4cc',
+      baselineBg:     neon ? 'rgba(58,77,106,0.3)'    : 'rgba(120,130,160,0.25)',
+      baselineBorder: neon ? 'rgba(58,77,106,0.7)'    : 'rgba(120,130,160,0.6)',
+      savingsBg:      neon ? 'rgba(0,245,212,0.1)'    : 'rgba(110,231,223,0.1)',
+      savingsBorder:  neon ? '#00f5d4'                 : '#6ee7df',
+      latBg:          neon ? 'rgba(255,183,0,0.18)'   : 'rgba(245,201,126,0.2)',
+      latBorder:      neon ? '#ffb700'                 : '#f5c97e',
+      modelColors:    neon ? N_COLORS : P_COLORS,
+      modelSoft:      neon ? N_SOFT   : P_SOFT,
+      barColors:      neon ? NB_COLORS : PB_COLORS,
+      barSoft:        neon ? NB_SOFT   : PB_SOFT,
+    };
+  };
+
+  const tc = themeColors();
+
+  // ── Donut ──
+  const donut = new Chart(document.getElementById('day_2026_02_24_donutChart'), {
     type: 'doughnut',
     data: {
-      labels: ["kimi-k2.5", "grok-code-fast-1", "gpt-oss-120b"],
-      datasets: [{ data: [0.7644, 0.664469, 0.493714], backgroundColor: SOFT, borderColor: COLORS, borderWidth: 1.5, hoverOffset: 5 }]
+      labels: ["grok-code-fast-1", "kimi-k2.5", "gpt-oss-120b"],
+      datasets: [{ data: [0.686151, 0.67036, 0.641698], backgroundColor: tc.modelSoft, borderColor: tc.modelColors, borderWidth: 1.5, hoverOffset: 5 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '68%',
       plugins: {
-        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: tc.legend } },
         tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.toFixed(6) } }
       }
     }
   });
+  window.CHARTS['day_2026_02_24_donutChart'] = { chart: donut, role: 'donut',
+    pastel: { colors: P_COLORS, soft: P_SOFT }, neon: { colors: N_COLORS, soft: N_SOFT } };
 
-  new Chart(document.getElementById('day_2026_02_24_barChart'), {
+  // ── Bar ──
+  const bar = new Chart(document.getElementById('day_2026_02_24_barChart'), {
     type: 'bar',
     data: {
-      labels: ["kimi-k2.5", "grok-code-fast-1", "gpt-oss-120b"],
+      labels: ["grok-code-fast-1", "kimi-k2.5", "gpt-oss-120b"],
       datasets: [
-        { label: 'Baseline', data: [11.0798, 10.3227, 7.1725], backgroundColor: 'rgba(120,130,160,0.25)', borderColor: 'rgba(120,130,160,0.6)', borderWidth: 1, borderRadius: 4 },
-        { label: 'Actual Cost', data: [0.7644, 0.6645, 0.4937], backgroundColor: BSOFT, borderColor: BCOLORS, borderWidth: 1.5, borderRadius: 4 },
-        { label: 'Savings', data: [10.3154, 9.6583, 6.6788], backgroundColor: 'rgba(110,231,223,0.1)', borderColor: '#6ee7df', borderWidth: 1, borderRadius: 4 }
+        { label: 'Baseline',    data: [10.2923, 10.0554, 9.6255], backgroundColor: tc.baselineBg, borderColor: tc.baselineBorder, borderWidth: 1, borderRadius: 4 },
+        { label: 'Actual Cost', data: [0.6862, 0.6704, 0.6417],     backgroundColor: tc.barSoft, borderColor: tc.barColors, borderWidth: 1.5, borderRadius: 4 },
+        { label: 'Savings',     data: [9.6061, 9.385, 8.9838],  backgroundColor: tc.savingsBg, borderColor: tc.savingsBorder, borderWidth: 1, borderRadius: 4 }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: legendColor } },
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: tc.legend } },
         tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(4) } }
       },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 0 } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => '$' + v.toFixed(1) } }
+        x: { grid: { color: tc.grid }, ticks: { color: tc.tick, maxRotation: 0 } },
+        y: { grid: { color: tc.grid }, ticks: { color: tc.tick, callback: v => '$' + v.toFixed(1) } }
       }
     }
   });
+  window.CHARTS['day_2026_02_24_barChart'] = { chart: bar, role: 'bar',
+    pastel: { colors: PB_COLORS, soft: PB_SOFT }, neon: { colors: NB_COLORS, soft: NB_SOFT } };
 
-  new Chart(document.getElementById('day_2026_02_24_tlChart'), {
+  // ── Timeline ──
+  const tlData = isNeon() ? TL_NEON : TL_PASTEL;
+  const tl = new Chart(document.getElementById('day_2026_02_24_tlChart'), {
     type: 'line',
-    data: { labels: ["07:10", "07:19", "07:22", "07:26", "07:53", "08:18", "08:34", "08:35", "08:40", "09:00", "09:14", "10:01", "10:03", "10:20", "10:37", "10:57", "11:01", "11:13", "11:14", "11:34", "11:48", "12:40", "12:42", "12:44", "12:49", "12:52", "13:10", "13:25", "13:28", "13:35", "14:03", "14:07", "14:22", "14:27", "14:32", "14:39", "15:09", "16:01", "16:03", "16:18", "16:21", "16:23", "16:34", "16:56", "17:05", "17:06", "17:21", "17:22", "17:48", "17:54", "18:01", "18:11", "18:12", "18:15", "18:59", "19:36", "20:22", "20:40", "20:41", "21:26", "21:31", "22:10", "22:27", "22:30", "22:37", "22:45"], datasets: [{"label": "kimi-k2.5", "data": [0.00015, 0, 0.04976, 0, 0.023465, 0, 0, 0, 0, 0, 0.042774, 0, 0.038476, 0, 0.03414, 0, 0.00491, 0.024847, 0, 0, 0, 0.019255, 0.041465, 0, 0, 0, 0, 0.046652, 0.010605, 0.037105, 0, 0, 0, 0, 0.03753, 0, 0.025028, 0, 0, 0.03636, 0, 0.012745, 0, 0.025852, 0.035883, 0, 0, 0.042599, 0, 0, 0, 0.034864, 0, 0.045948, 0, 0, 0, 0, 0.00231, 0.031043, 0.047084, 0.013549, 0, 0, 0, 0], "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "grok-code-fast-1", "data": [0, 0.025337, 0, 0, 0, 0, 0.030528, 0.037129, 0.015765, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.039955, 0.019095, 0, 0, 0, 0.032202, 0, 0.035162, 0.049202, 0, 0, 0, 0, 0, 0.023166, 0, 0, 0, 0, 0, 0.03614, 0, 0, 0, 0.039489, 0, 0.041005, 0, 0.011578, 0, 0.037706, 0, 0, 0, 0, 0, 0.027894, 0.024689, 0.036627, 0.003935, 0, 0, 0, 0, 0.027693, 0.04258, 0, 0.027592], "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "gpt-oss-120b", "data": [0, 0, 0, 0.049304, 0, 0.008763, 0, 0, 0, 0.02127, 0, 0.031574, 0, 0.031715, 0, 0.005198, 0, 0, 0, 0, 0.017453, 0, 0, 0, 0.021441, 0, 0, 0, 0, 0, 0.048795, 0.024466, 0, 0.019771, 0, 0.027518, 0, 0.017759, 0, 0, 0.005163, 0, 0, 0, 0, 0.030577, 0, 0, 0, 0.036236, 0.039166, 0, 0.014333, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.043211, 0], "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}] },
+    data: { labels: ["07:09", "07:18", "07:33", "07:35", "07:40", "07:54", "08:00", "08:33", "08:48", "08:51", "09:03", "09:04", "09:21", "09:24", "09:47", "09:51", "10:07", "10:22", "10:35", "10:44", "10:58", "10:59", "11:06", "11:11", "11:21", "11:24", "11:26", "11:54", "12:20", "12:23", "12:27", "12:31", "12:43", "13:40", "14:32", "14:37", "15:32", "15:34", "15:47", "15:51", "16:02", "16:14", "16:19", "16:53", "17:04", "17:22", "17:34", "17:42", "17:45", "18:32", "18:37", "19:04", "19:10", "19:12", "19:13", "19:25", "19:41", "20:05", "20:27", "20:55", "21:01", "21:12", "21:20", "21:25", "21:32", "21:53", "22:02", "22:04", "22:05", "22:15", "22:26", "22:33", "22:34"], datasets: tlData },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: tc.legend } },
         tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) } }
       },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 18, maxRotation: 0 } },
-        y: { grid: { color: gridColor }, stacked: true, ticks: { color: tickColor, callback: v => '$' + v.toFixed(4) } }
+        x: { grid: { color: tc.grid }, ticks: { color: tc.tick, maxTicksLimit: 18, maxRotation: 0 } },
+        y: { grid: { color: tc.grid }, stacked: true, ticks: { color: tc.tick, callback: v => '$' + v.toFixed(4) } }
       }
     }
   });
+  window.CHARTS['day_2026_02_24_tlChart'] = { chart: tl, role: 'tl',
+    pastel: { tl: TL_PASTEL }, neon: { tl: TL_NEON } };
 
-  new Chart(document.getElementById('day_2026_02_24_latChart'), {
+  // ── Latency ──
+  const lat = new Chart(document.getElementById('day_2026_02_24_latChart'), {
     type: 'bar',
     data: {
       labels: ["0-2s", "2-4s", "4-6s", "6-8s", "8-10s", "10-12s", "12-14s", "14-16s", "16-18s", "18s+"],
-      datasets: [{ label: 'Requests', data: [6, 7, 7, 7, 2, 7, 10, 5, 10, 7], backgroundColor: 'rgba(245,201,126,0.2)', borderColor: '#f5c97e', borderWidth: 1, borderRadius: 3 }]
+      datasets: [{ label: 'Requests', data: [10, 10, 3, 12, 8, 11, 5, 9, 12, 0], backgroundColor: tc.latBg, borderColor: tc.latBorder, borderWidth: 1, borderRadius: 3 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 45, font: { size: 9 } } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+        x: { grid: { color: tc.grid }, ticks: { color: tc.tick, maxRotation: 45, font: { size: 9 } } },
+        y: { grid: { color: tc.grid }, ticks: { color: tc.tick } }
       }
     }
   });
+  window.CHARTS['day_2026_02_24_latChart'] = { chart: lat, role: 'lat' };
+
 })();
 </script>
 
@@ -881,11 +1173,11 @@ td.dim { color: var(--dim); }
       <h2 class="section-title">Daily Report · 2026-02-23</h2>
     </div>
     <div class="section-meta">
-      <span>119 requests</span>
+      <span>80 requests</span>
       <span>·</span>
       <span>3 models</span>
       <span>·</span>
-      <span>$2.8530 actual</span>
+      <span>$2.0819 actual</span>
     </div>
   </div>
 
@@ -893,26 +1185,26 @@ td.dim { color: var(--dim); }
   <div class="kpi-strip">
     <div class="kpi" style="--accent:#6ee7df;">
       <div class="kpi-label">Requests</div>
-      <div class="kpi-value">119</div>
+      <div class="kpi-value">80</div>
     </div>
     <div class="kpi" style="--accent:#d4a0c8;">
       <div class="kpi-label">Actual Cost</div>
-      <div class="kpi-value">$2.8530</div>
+      <div class="kpi-value">$2.0819</div>
       <div class="kpi-sub">USD this period</div>
     </div>
     <div class="kpi" style="--accent:#8899aa;">
       <div class="kpi-label">Baseline Cost</div>
-      <div class="kpi-value">$41.56</div>
+      <div class="kpi-value">$31.23</div>
       <div class="kpi-sub">without routing</div>
     </div>
     <div class="kpi" style="--accent:#86efac;">
       <div class="kpi-label">Real Savings</div>
-      <div class="kpi-value">$38.70</div>
+      <div class="kpi-value">$29.15</div>
       <div class="kpi-sub">baseline − actual</div>
     </div>
     <div class="kpi" style="--accent:#f5c97e;">
       <div class="kpi-label">Avg Latency</div>
-      <div class="kpi-value">9655<span style="font-size:14px;"> ms</span></div>
+      <div class="kpi-value">8921<span style="font-size:14px;"> ms</span></div>
     </div>
   </div>
 
@@ -926,7 +1218,7 @@ td.dim { color: var(--dim); }
         <svg width="140" height="140" viewBox="0 0 140 140">
           <circle class="gauge-bg"   cx="70" cy="70" r="54"/>
           <circle class="gauge-fill" cx="70" cy="70" r="54"
-            style="stroke:#6ee7df;stroke-dasharray:316.01 23.29;filter:drop-shadow(0 0 6px #6ee7df)90;"/>
+            style="stroke:#6ee7df;stroke-dasharray:316.68 22.62;filter:drop-shadow(0 0 6px #6ee7df)90;"/>
         </svg>
         <div class="gauge-center">
           <div class="gauge-pct" style="color:#6ee7df;text-shadow:0 0 14px #6ee7df66;">93%</div>
@@ -934,9 +1226,9 @@ td.dim { color: var(--dim); }
         </div>
       </div>
       <div class="card-title" style="text-align:center;margin-top:4px;">Routing Tiers</div>
-      <div class="tier-badges"><div class="tier-badge" style="border-color:rgba(212,160,200,0.4);background:rgba(212,160,200,0.07);"><span class="tier-name" style="color:#d4a0c8;">DIRECT</span><span class="tier-count">37 req</span><span class="tier-cost" style="color:#d4a0c8;">$0.9222</span></div>
-<div class="tier-badge" style="border-color:rgba(245,201,126,0.4);background:rgba(245,201,126,0.07);"><span class="tier-name" style="color:#f5c97e;">MEDIUM</span><span class="tier-count">44 req</span><span class="tier-cost" style="color:#f5c97e;">$1.0245</span></div>
-<div class="tier-badge" style="border-color:rgba(110,231,223,0.4);background:rgba(110,231,223,0.07);"><span class="tier-name" style="color:#6ee7df;">SIMPLE</span><span class="tier-count">38 req</span><span class="tier-cost" style="color:#6ee7df;">$0.9064</span></div></div>
+      <div class="tier-badges"><div class="tier-badge" style="border-color:rgba(212,160,200,0.4);background:rgba(212,160,200,0.07);"><span class="tier-name" style="color:#d4a0c8;">DIRECT</span><span class="tier-count">26 req</span><span class="tier-cost" style="color:#d4a0c8;">$0.7588</span></div>
+<div class="tier-badge" style="border-color:rgba(245,201,126,0.4);background:rgba(245,201,126,0.07);"><span class="tier-name" style="color:#f5c97e;">MEDIUM</span><span class="tier-count">28 req</span><span class="tier-cost" style="color:#f5c97e;">$0.7575</span></div>
+<div class="tier-badge" style="border-color:rgba(110,231,223,0.4);background:rgba(110,231,223,0.07);"><span class="tier-name" style="color:#6ee7df;">SIMPLE</span><span class="tier-count">26 req</span><span class="tier-cost" style="color:#6ee7df;">$0.5657</span></div></div>
     </div>
 
     <!-- Bar chart -->
@@ -976,9 +1268,9 @@ td.dim { color: var(--dim); }
             <th>Baseline</th><th>Saved</th><th>Rate</th><th>Avg Lat</th>
           </tr>
         </thead>
-        <tbody><tr><td><span class="dot" style="background:#f5c97e;box-shadow:0 0 6px rgba(245,201,126,0.7);"></span><span class="model-name">kimi-k2.5</span></td><td class="num">51</td><td class="num">$1.2269</td><td class="num dim">$17.6833</td><td class="num" style="color:#f5c97e;">$16.4564</td><td class="num"><span class="pill" style="background:rgba(245,201,126,0.12);color:#f5c97e;border:1px solid rgba(245,201,126,0.3);">93.1%</span></td><td class="num dim">9908 ms</td></tr>
-<tr><td><span class="dot" style="background:#d4a0c8;box-shadow:0 0 6px rgba(212,160,200,0.7);"></span><span class="model-name">gpt-oss-120b</span></td><td class="num">33</td><td class="num">$0.8385</td><td class="num dim">$12.7023</td><td class="num" style="color:#d4a0c8;">$11.8638</td><td class="num"><span class="pill" style="background:rgba(212,160,200,0.12);color:#d4a0c8;border:1px solid rgba(212,160,200,0.3);">93.4%</span></td><td class="num dim">10298 ms</td></tr>
-<tr><td><span class="dot" style="background:#6ee7df;box-shadow:0 0 6px rgba(110,231,223,0.7);"></span><span class="model-name">grok-code-fast-1</span></td><td class="num">35</td><td class="num">$0.7876</td><td class="num dim">$11.1723</td><td class="num" style="color:#6ee7df;">$10.3847</td><td class="num"><span class="pill" style="background:rgba(110,231,223,0.12);color:#6ee7df;border:1px solid rgba(110,231,223,0.3);">93.0%</span></td><td class="num dim">8680 ms</td></tr></tbody>
+        <tbody><tr><td><span class="dot" style="background:#d4a0c8;box-shadow:0 0 6px rgba(212,160,200,0.7);"></span><span class="model-name">grok-code-fast-1</span></td><td class="num">31</td><td class="num">$0.8676</td><td class="num dim">$13.0144</td><td class="num" style="color:#d4a0c8;">$12.1468</td><td class="num"><span class="pill" style="background:rgba(212,160,200,0.12);color:#d4a0c8;border:1px solid rgba(212,160,200,0.3);">93.3%</span></td><td class="num dim">8143 ms</td></tr>
+<tr><td><span class="dot" style="background:#f5c97e;box-shadow:0 0 6px rgba(245,201,126,0.7);"></span><span class="model-name">gpt-oss-120b</span></td><td class="num">27</td><td class="num">$0.7548</td><td class="num dim">$11.3218</td><td class="num" style="color:#f5c97e;">$10.5670</td><td class="num"><span class="pill" style="background:rgba(245,201,126,0.12);color:#f5c97e;border:1px solid rgba(245,201,126,0.3);">93.3%</span></td><td class="num dim">8843 ms</td></tr>
+<tr><td><span class="dot" style="background:#6ee7df;box-shadow:0 0 6px rgba(110,231,223,0.7);"></span><span class="model-name">kimi-k2.5</span></td><td class="num">22</td><td class="num">$0.4595</td><td class="num dim">$6.8927</td><td class="num" style="color:#6ee7df;">$6.4332</td><td class="num"><span class="pill" style="background:rgba(110,231,223,0.12);color:#6ee7df;border:1px solid rgba(110,231,223,0.3);">93.3%</span></td><td class="num dim">10113 ms</td></tr></tbody>
       </table>
     </div>
     <div class="card">
@@ -993,284 +1285,125 @@ td.dim { color: var(--dim); }
 
 <script>
 (function() {
-  const COLORS  = ["#f5c97e", "#d4a0c8", "#6ee7df"];
-  const SOFT    = ["rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)", "rgba(110,231,223,0.18)"];
-  const BCOLORS = ["#f5c97e", "#d4a0c8", "#6ee7df"];
-  const BSOFT   = ["rgba(245,201,126,0.18)", "rgba(212,160,200,0.18)", "rgba(110,231,223,0.18)"];
-  const gridColor = 'rgba(180,190,220,0.07)';
-  const tickColor = '#7a86a8';
-  const legendColor = '#a8b4cc';
+  window.CHARTS = window.CHARTS || {};
+  const isNeon  = () => document.documentElement.getAttribute('data-theme') === 'neon';
 
-  new Chart(document.getElementById('day_2026_02_23_donutChart'), {
+  // Both palettes for this section
+  const P_COLORS = ["#d4a0c8", "#f5c97e", "#6ee7df"];
+  const P_SOFT   = ["rgba(212,160,200,0.18)", "rgba(245,201,126,0.18)", "rgba(110,231,223,0.18)"];
+  const N_COLORS = ["#ff3cac", "#ffb700", "#00f5d4"];
+  const N_SOFT   = ["rgba(255,60,172,0.2)", "rgba(255,183,0,0.2)", "rgba(0,245,212,0.2)"];
+  const PB_COLORS = ["#d4a0c8", "#f5c97e", "#6ee7df"];
+  const PB_SOFT   = ["rgba(212,160,200,0.18)", "rgba(245,201,126,0.18)", "rgba(110,231,223,0.18)"];
+  const NB_COLORS = ["#ff3cac", "#ffb700", "#00f5d4"];
+  const NB_SOFT   = ["rgba(255,60,172,0.2)", "rgba(255,183,0,0.2)", "rgba(0,245,212,0.2)"];
+  const TL_PASTEL = [{"label": "grok-code-fast-1", "data": [0, 0, 0, 0, 0, 0.011411, 0.047607, 0.04891, 0, 0.047891, 0, 0.023383, 0.006493, 0, 0.019508, 0, 0.005906, 0.081468, 0.049839, 0.000895, 0.019982, 0.02953, 0, 0.009625, 0, 0, 0.01698, 0, 0, 0, 0.036547, 0.045964, 0, 0, 0, 0, 0, 0.038007, 0, 0, 0, 0, 0, 0, 0, 0.017352, 0, 0.048041, 0, 0, 0, 0, 0, 0.005315, 0.019519, 0, 0.023235, 0.035287, 0, 0, 0, 0, 0, 0, 0, 0, 0.03781, 0, 0.036813, 0, 0, 0.020558, 0, 0.041173, 0.018064, 0, 0.024511, 0, 0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)"}, {"label": "gpt-oss-120b", "data": [0.037929, 0.033728, 0.003062, 0, 0.015235, 0, 0, 0, 0, 0, 0, 0, 0, 0.036443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.044481, 0, 0.029486, 0, 0.031661, 0, 0, 0.040964, 0.015788, 0, 0.036015, 0, 0, 0.034576, 0.036886, 0, 0, 0.022632, 0.040898, 0.011346, 0, 0.038556, 0, 0.008639, 0.007856, 0, 0, 0, 0, 0, 0, 0, 0, 0.042671, 0.000397, 0, 0, 0.045752, 0.017719, 0.017041, 0.046851, 0, 0, 0, 0, 0.014305, 0, 0, 0, 0, 0, 0, 0, 0.043867], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)"}, {"label": "kimi-k2.5", "data": [0, 0, 0, 0.048409, 0, 0, 0, 0, 0.038278, 0, 0.018832, 0, 0, 0, 0, 0.042363, 0, 0, 0, 0, 0, 0, 0.004981, 0, 0.009886, 0, 0, 0, 0.003075, 0, 0, 0, 0, 0, 0.034068, 0, 0.008276, 0, 0, 0, 0.02823, 0.008177, 0, 0, 0, 0, 0, 0, 0, 0, 0.018155, 0.012757, 0.048701, 0, 0, 0.030014, 0, 0, 0, 0, 0.013195, 0.030026, 0, 0, 0, 0, 0, 0.013414, 0, 0.021577, 0, 0, 0.014725, 0, 0, 0.009113, 0, 0.003264, 0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)"}];
+  const TL_NEON   = [{"label": "grok-code-fast-1", "data": [0, 0, 0, 0, 0, 0.011411, 0.047607, 0.04891, 0, 0.047891, 0, 0.023383, 0.006493, 0, 0.019508, 0, 0.005906, 0.081468, 0.049839, 0.000895, 0.019982, 0.02953, 0, 0.009625, 0, 0, 0.01698, 0, 0, 0, 0.036547, 0.045964, 0, 0, 0, 0, 0, 0.038007, 0, 0, 0, 0, 0, 0, 0, 0.017352, 0, 0.048041, 0, 0, 0, 0, 0, 0.005315, 0.019519, 0, 0.023235, 0.035287, 0, 0, 0, 0, 0, 0, 0, 0, 0.03781, 0, 0.036813, 0, 0, 0.020558, 0, 0.041173, 0.018064, 0, 0.024511, 0, 0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#ff3cac", "backgroundColor": "rgba(255,60,172,0.2)"}, {"label": "gpt-oss-120b", "data": [0.037929, 0.033728, 0.003062, 0, 0.015235, 0, 0, 0, 0, 0, 0, 0, 0, 0.036443, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.044481, 0, 0.029486, 0, 0.031661, 0, 0, 0.040964, 0.015788, 0, 0.036015, 0, 0, 0.034576, 0.036886, 0, 0, 0.022632, 0.040898, 0.011346, 0, 0.038556, 0, 0.008639, 0.007856, 0, 0, 0, 0, 0, 0, 0, 0, 0.042671, 0.000397, 0, 0, 0.045752, 0.017719, 0.017041, 0.046851, 0, 0, 0, 0, 0.014305, 0, 0, 0, 0, 0, 0, 0, 0.043867], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#ffb700", "backgroundColor": "rgba(255,183,0,0.2)"}, {"label": "kimi-k2.5", "data": [0, 0, 0, 0.048409, 0, 0, 0, 0, 0.038278, 0, 0.018832, 0, 0, 0, 0, 0.042363, 0, 0, 0, 0, 0, 0, 0.004981, 0, 0.009886, 0, 0, 0, 0.003075, 0, 0, 0, 0, 0, 0.034068, 0, 0.008276, 0, 0, 0, 0.02823, 0.008177, 0, 0, 0, 0, 0, 0, 0, 0, 0.018155, 0.012757, 0.048701, 0, 0, 0.030014, 0, 0, 0, 0, 0.013195, 0.030026, 0, 0, 0, 0, 0, 0.013414, 0, 0.021577, 0, 0, 0.014725, 0, 0, 0.009113, 0, 0.003264, 0], "fill": true, "tension": 0.4, "pointRadius": 2, "borderColor": "#00f5d4", "backgroundColor": "rgba(0,245,212,0.2)"}];
+
+  const themeColors = () => {
+    const neon = isNeon();
+    return {
+      grid:           neon ? 'rgba(0,245,212,0.06)'   : 'rgba(180,190,220,0.07)',
+      tick:           neon ? '#3a4d6a'                 : '#7a86a8',
+      legend:         neon ? '#5a7090'                 : '#a8b4cc',
+      baselineBg:     neon ? 'rgba(58,77,106,0.3)'    : 'rgba(120,130,160,0.25)',
+      baselineBorder: neon ? 'rgba(58,77,106,0.7)'    : 'rgba(120,130,160,0.6)',
+      savingsBg:      neon ? 'rgba(0,245,212,0.1)'    : 'rgba(110,231,223,0.1)',
+      savingsBorder:  neon ? '#00f5d4'                 : '#6ee7df',
+      latBg:          neon ? 'rgba(255,183,0,0.18)'   : 'rgba(245,201,126,0.2)',
+      latBorder:      neon ? '#ffb700'                 : '#f5c97e',
+      modelColors:    neon ? N_COLORS : P_COLORS,
+      modelSoft:      neon ? N_SOFT   : P_SOFT,
+      barColors:      neon ? NB_COLORS : PB_COLORS,
+      barSoft:        neon ? NB_SOFT   : PB_SOFT,
+    };
+  };
+
+  const tc = themeColors();
+
+  // ── Donut ──
+  const donut = new Chart(document.getElementById('day_2026_02_23_donutChart'), {
     type: 'doughnut',
     data: {
-      labels: ["kimi-k2.5", "gpt-oss-120b", "grok-code-fast-1"],
-      datasets: [{ data: [1.226873, 0.838525, 0.787636], backgroundColor: SOFT, borderColor: COLORS, borderWidth: 1.5, hoverOffset: 5 }]
+      labels: ["grok-code-fast-1", "gpt-oss-120b", "kimi-k2.5"],
+      datasets: [{ data: [0.867627, 0.754784, 0.459515], backgroundColor: tc.modelSoft, borderColor: tc.modelColors, borderWidth: 1.5, hoverOffset: 5 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '68%',
       plugins: {
-        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: tc.legend } },
         tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.toFixed(6) } }
       }
     }
   });
+  window.CHARTS['day_2026_02_23_donutChart'] = { chart: donut, role: 'donut',
+    pastel: { colors: P_COLORS, soft: P_SOFT }, neon: { colors: N_COLORS, soft: N_SOFT } };
 
-  new Chart(document.getElementById('day_2026_02_23_barChart'), {
+  // ── Bar ──
+  const bar = new Chart(document.getElementById('day_2026_02_23_barChart'), {
     type: 'bar',
     data: {
-      labels: ["kimi-k2.5", "gpt-oss-120b", "grok-code-fast-1"],
+      labels: ["grok-code-fast-1", "gpt-oss-120b", "kimi-k2.5"],
       datasets: [
-        { label: 'Baseline', data: [17.6833, 12.7023, 11.1723], backgroundColor: 'rgba(120,130,160,0.25)', borderColor: 'rgba(120,130,160,0.6)', borderWidth: 1, borderRadius: 4 },
-        { label: 'Actual Cost', data: [1.2269, 0.8385, 0.7876], backgroundColor: BSOFT, borderColor: BCOLORS, borderWidth: 1.5, borderRadius: 4 },
-        { label: 'Savings', data: [16.4564, 11.8638, 10.3847], backgroundColor: 'rgba(110,231,223,0.1)', borderColor: '#6ee7df', borderWidth: 1, borderRadius: 4 }
+        { label: 'Baseline',    data: [13.0144, 11.3218, 6.8927], backgroundColor: tc.baselineBg, borderColor: tc.baselineBorder, borderWidth: 1, borderRadius: 4 },
+        { label: 'Actual Cost', data: [0.8676, 0.7548, 0.4595],     backgroundColor: tc.barSoft, borderColor: tc.barColors, borderWidth: 1.5, borderRadius: 4 },
+        { label: 'Savings',     data: [12.1468, 10.567, 6.4332],  backgroundColor: tc.savingsBg, borderColor: tc.savingsBorder, borderWidth: 1, borderRadius: 4 }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: legendColor } },
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: tc.legend } },
         tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(4) } }
       },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 0 } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => '$' + v.toFixed(1) } }
+        x: { grid: { color: tc.grid }, ticks: { color: tc.tick, maxRotation: 0 } },
+        y: { grid: { color: tc.grid }, ticks: { color: tc.tick, callback: v => '$' + v.toFixed(1) } }
       }
     }
   });
+  window.CHARTS['day_2026_02_23_barChart'] = { chart: bar, role: 'bar',
+    pastel: { colors: PB_COLORS, soft: PB_SOFT }, neon: { colors: NB_COLORS, soft: NB_SOFT } };
 
-  new Chart(document.getElementById('day_2026_02_23_tlChart'), {
+  // ── Timeline ──
+  const tlData = isNeon() ? TL_NEON : TL_PASTEL;
+  const tl = new Chart(document.getElementById('day_2026_02_23_tlChart'), {
     type: 'line',
-    data: { labels: ["07:01", "07:05", "07:06", "07:15", "07:33", "07:40", "07:56", "08:09", "08:12", "08:29", "08:30", "08:42", "09:08", "09:16", "09:17", "09:22", "09:23", "09:32", "09:37", "09:41", "10:07", "10:25", "10:27", "10:32", "10:37", "10:43", "10:47", "11:16", "11:22", "11:30", "11:36", "11:48", "11:49", "11:51", "12:05", "12:13", "12:19", "12:20", "12:26", "12:27", "12:30", "12:31", "12:34", "12:44", "12:47", "12:51", "13:12", "13:13", "13:26", "13:29", "13:30", "13:32", "13:38", "13:42", "13:51", "14:09", "14:11", "14:20", "14:25", "14:33", "14:36", "14:38", "14:40", "14:51", "15:00", "15:12", "15:40", "15:42", "15:43", "15:44", "16:19", "16:29", "16:30", "16:36", "16:37", "16:52", "17:01", "17:03", "17:11", "17:12", "17:22", "17:43", "17:48", "17:50", "17:59", "18:00", "18:13", "18:20", "18:32", "18:57", "19:18", "19:21", "19:28", "19:42", "19:46", "19:52", "19:56", "20:21", "20:33", "20:57", "21:15", "21:21", "21:22", "21:31", "21:35", "21:39", "21:46", "21:51", "22:33", "22:35", "22:36", "22:39", "22:43", "22:57"], datasets: [{"label": "kimi-k2.5", "data": [0.026398, 0, 0, 0.039377, 0.048871, 0, 0.027322, 0, 0, 0, 0, 0.029294, 0.022293, 0.017407, 0, 0.044629, 0.031185, 0.039811, 0.01596, 0.024849, 0.01038, 0.017339, 0, 0.006244, 0, 0, 0, 0.035342, 0, 0.025813, 0, 0.007002, 0.000623, 0, 0, 0, 0, 0, 0, 0, 0, 0.044892, 0, 0, 0, 0, 0, 0.045863, 0.010689, 0, 0, 0.045404, 0.030951, 0.042009, 0, 0.007892, 0, 0, 0.009239, 0, 0.025643, 0.023794, 0, 0.030353, 0.047719, 0, 0, 0, 0.01798, 0, 0.028319, 0, 0, 0, 0, 0.009158, 0, 0, 0.028016, 0, 0.017219, 0, 0, 0, 0.001358, 0.0004, 0, 0.048738, 0.035612, 0, 0, 0, 0.031195, 0.010914, 0, 0.035637, 0.030059, 0, 0.019898, 0.011184, 0, 0, 0, 0, 0.025448, 0, 0, 0.029404, 0.011748, 0, 0, 0, 0, 0], "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "gpt-oss-120b", "data": [0, 0.009932, 0, 0, 0, 0.032605, 0, 0, 0.020178, 0.047921, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.002841, 0, 0.021279, 0.034764, 0.007881, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.037484, 0, 0, 0.039086, 0.00861, 0, 0, 0, 0, 0, 0, 0.002961, 0, 0, 0, 0.036305, 0, 0.00283, 0.006355, 0, 0.060959, 0, 0, 0, 0, 0, 0, 0, 0.012015, 0, 0, 0, 0, 0.037462, 0.017893, 0.032647, 0, 0.024028, 0, 0, 0.020719, 0, 0.009386, 0, 0.038864, 0, 0, 0, 0, 0, 0, 0, 0.039641, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.039732, 0.012552, 0, 0, 0.048197, 0, 0, 0, 0, 0.043252, 0, 0.040911, 0.049235], "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "grok-code-fast-1", "data": [0, 0, 0.046887, 0, 0, 0, 0, 0.01912, 0, 0, 0.006174, 0.01189, 0, 0, 0.044388, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.010089, 0, 0.019053, 0, 0, 0.024202, 0.010469, 0.042495, 0.020543, 0.009256, 0.013789, 0, 0.007125, 0, 0, 0, 0.002504, 0.031733, 0.019589, 0, 0, 0.042321, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01392, 0, 0, 0.004617, 0.037524, 0, 0, 0.015695, 0, 0.000719, 0, 0, 0, 0, 0, 0.048708, 0, 0, 0, 0, 0.02117, 0, 0, 0, 0.004887, 0, 0, 0.00509, 0.031679, 0, 0, 0, 0.042499, 0, 0, 0.04483, 0, 0, 0.030091, 0, 0, 0.031375, 0, 0, 0.030358, 0, 0, 0.037561, 0, 0.005289, 0, 0], "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}] },
+    data: { labels: ["07:06", "07:10", "07:22", "07:23", "07:25", "07:38", "07:49", "07:58", "08:07", "08:34", "08:40", "09:06", "09:17", "09:26", "09:39", "09:42", "10:07", "11:24", "11:32", "11:37", "11:40", "11:41", "11:42", "11:50", "12:04", "12:13", "12:36", "12:39", "12:46", "12:56", "13:27", "13:34", "13:48", "13:55", "14:01", "14:14", "14:19", "14:25", "14:43", "15:03", "15:11", "15:54", "15:57", "16:11", "16:27", "16:34", "16:39", "16:44", "16:49", "17:00", "17:11", "17:28", "17:35", "17:38", "17:42", "17:50", "17:56", "18:50", "19:08", "19:19", "19:22", "19:24", "19:52", "20:05", "20:17", "20:25", "20:28", "20:51", "20:53", "21:00", "21:17", "21:19", "21:40", "21:57", "22:16", "22:32", "22:49", "22:52", "22:58"], datasets: tlData },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: legendColor } },
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: tc.legend } },
         tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) } }
       },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 18, maxRotation: 0 } },
-        y: { grid: { color: gridColor }, stacked: true, ticks: { color: tickColor, callback: v => '$' + v.toFixed(4) } }
+        x: { grid: { color: tc.grid }, ticks: { color: tc.tick, maxTicksLimit: 18, maxRotation: 0 } },
+        y: { grid: { color: tc.grid }, stacked: true, ticks: { color: tc.tick, callback: v => '$' + v.toFixed(4) } }
       }
     }
   });
+  window.CHARTS['day_2026_02_23_tlChart'] = { chart: tl, role: 'tl',
+    pastel: { tl: TL_PASTEL }, neon: { tl: TL_NEON } };
 
-  new Chart(document.getElementById('day_2026_02_23_latChart'), {
+  // ── Latency ──
+  const lat = new Chart(document.getElementById('day_2026_02_23_latChart'), {
     type: 'bar',
     data: {
       labels: ["0-2s", "2-4s", "4-6s", "6-8s", "8-10s", "10-12s", "12-14s", "14-16s", "16-18s", "18s+"],
-      datasets: [{ label: 'Requests', data: [8, 18, 9, 14, 16, 11, 11, 10, 13, 9], backgroundColor: 'rgba(245,201,126,0.2)', borderColor: '#f5c97e', borderWidth: 1, borderRadius: 3 }]
+      datasets: [{ label: 'Requests', data: [8, 9, 8, 9, 13, 8, 10, 8, 7, 0], backgroundColor: tc.latBg, borderColor: tc.latBorder, borderWidth: 1, borderRadius: 3 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 45, font: { size: 9 } } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+        x: { grid: { color: tc.grid }, ticks: { color: tc.tick, maxRotation: 45, font: { size: 9 } } },
+        y: { grid: { color: tc.grid }, ticks: { color: tc.tick } }
       }
     }
   });
-})();
-</script>
+  window.CHARTS['day_2026_02_23_latChart'] = { chart: lat, role: 'lat' };
 
-<section id="day-2026-02-22" class="dashboard-section">
-  <div class="section-header">
-    <div>
-      <span class="section-tag section-tag-daily">DAILY</span>
-      <h2 class="section-title">Daily Report · 2026-02-22</h2>
-    </div>
-    <div class="section-meta">
-      <span>81 requests</span>
-      <span>·</span>
-      <span>3 models</span>
-      <span>·</span>
-      <span>$1.9957 actual</span>
-    </div>
-  </div>
-
-  <!-- KPI strip -->
-  <div class="kpi-strip">
-    <div class="kpi" style="--accent:#6ee7df;">
-      <div class="kpi-label">Requests</div>
-      <div class="kpi-value">81</div>
-    </div>
-    <div class="kpi" style="--accent:#d4a0c8;">
-      <div class="kpi-label">Actual Cost</div>
-      <div class="kpi-value">$1.9957</div>
-      <div class="kpi-sub">USD this period</div>
-    </div>
-    <div class="kpi" style="--accent:#8899aa;">
-      <div class="kpi-label">Baseline Cost</div>
-      <div class="kpi-value">$29.96</div>
-      <div class="kpi-sub">without routing</div>
-    </div>
-    <div class="kpi" style="--accent:#86efac;">
-      <div class="kpi-label">Real Savings</div>
-      <div class="kpi-value">$27.96</div>
-      <div class="kpi-sub">baseline − actual</div>
-    </div>
-    <div class="kpi" style="--accent:#f5c97e;">
-      <div class="kpi-label">Avg Latency</div>
-      <div class="kpi-value">9784<span style="font-size:14px;"> ms</span></div>
-    </div>
-  </div>
-
-  <!-- Main grid -->
-  <div class="main-grid">
-
-    <!-- Gauge + tiers -->
-    <div class="card gauge-card">
-      <div class="card-title" style="text-align:center;">Savings Rate</div>
-      <div class="gauge-wrap">
-        <svg width="140" height="140" viewBox="0 0 140 140">
-          <circle class="gauge-bg"   cx="70" cy="70" r="54"/>
-          <circle class="gauge-fill" cx="70" cy="70" r="54"
-            style="stroke:#6ee7df;stroke-dasharray:316.7 22.6;filter:drop-shadow(0 0 6px #6ee7df)90;"/>
-        </svg>
-        <div class="gauge-center">
-          <div class="gauge-pct" style="color:#6ee7df;text-shadow:0 0 14px #6ee7df66;">93%</div>
-          <div class="gauge-lbl">SAVED</div>
-        </div>
-      </div>
-      <div class="card-title" style="text-align:center;margin-top:4px;">Routing Tiers</div>
-      <div class="tier-badges"><div class="tier-badge" style="border-color:rgba(212,160,200,0.4);background:rgba(212,160,200,0.07);"><span class="tier-name" style="color:#d4a0c8;">DIRECT</span><span class="tier-count">25 req</span><span class="tier-cost" style="color:#d4a0c8;">$0.6947</span></div>
-<div class="tier-badge" style="border-color:rgba(245,201,126,0.4);background:rgba(245,201,126,0.07);"><span class="tier-name" style="color:#f5c97e;">MEDIUM</span><span class="tier-count">31 req</span><span class="tier-cost" style="color:#f5c97e;">$0.7917</span></div>
-<div class="tier-badge" style="border-color:rgba(110,231,223,0.4);background:rgba(110,231,223,0.07);"><span class="tier-name" style="color:#6ee7df;">SIMPLE</span><span class="tier-count">25 req</span><span class="tier-cost" style="color:#6ee7df;">$0.5093</span></div></div>
-    </div>
-
-    <!-- Bar chart -->
-    <div class="card">
-      <div class="card-title">Cost · Baseline · Savings by Model</div>
-      <div class="chart-wrap">
-        <canvas id="day_2026_02_22_barChart"></canvas>
-      </div>
-    </div>
-
-    <!-- Donut -->
-    <div class="card">
-      <div class="card-title">Actual Cost Share</div>
-      <div class="chart-wrap">
-        <canvas id="day_2026_02_22_donutChart"></canvas>
-      </div>
-    </div>
-
-    <!-- Timeline -->
-    <div class="card span2">
-      <div class="card-title">Cost Timeline per Minute</div>
-      <div class="chart-wrap">
-        <canvas id="day_2026_02_22_tlChart"></canvas>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Bottom row -->
-  <div class="bottom-grid">
-    <div class="card">
-      <div class="card-title">Model Breakdown</div>
-      <table class="model-table">
-        <thead>
-          <tr>
-            <th>Model</th><th>Req</th><th>Actual</th>
-            <th>Baseline</th><th>Saved</th><th>Rate</th><th>Avg Lat</th>
-          </tr>
-        </thead>
-        <tbody><tr><td><span class="dot" style="background:#6ee7df;box-shadow:0 0 6px rgba(110,231,223,0.7);"></span><span class="model-name">gpt-oss-120b</span></td><td class="num">31</td><td class="num">$0.7687</td><td class="num dim">$11.8764</td><td class="num" style="color:#6ee7df;">$11.1076</td><td class="num"><span class="pill" style="background:rgba(110,231,223,0.12);color:#6ee7df;border:1px solid rgba(110,231,223,0.3);">93.5%</span></td><td class="num dim">10176 ms</td></tr>
-<tr><td><span class="dot" style="background:#d4a0c8;box-shadow:0 0 6px rgba(212,160,200,0.7);"></span><span class="model-name">grok-code-fast-1</span></td><td class="num">26</td><td class="num">$0.6210</td><td class="num dim">$9.5093</td><td class="num" style="color:#d4a0c8;">$8.8883</td><td class="num"><span class="pill" style="background:rgba(212,160,200,0.12);color:#d4a0c8;border:1px solid rgba(212,160,200,0.3);">93.5%</span></td><td class="num dim">10730 ms</td></tr>
-<tr><td><span class="dot" style="background:#f5c97e;box-shadow:0 0 6px rgba(245,201,126,0.7);"></span><span class="model-name">kimi-k2.5</span></td><td class="num">24</td><td class="num">$0.6060</td><td class="num dim">$8.5716</td><td class="num" style="color:#f5c97e;">$7.9656</td><td class="num"><span class="pill" style="background:rgba(245,201,126,0.12);color:#f5c97e;border:1px solid rgba(245,201,126,0.3);">92.9%</span></td><td class="num dim">8252 ms</td></tr></tbody>
-      </table>
-    </div>
-    <div class="card">
-      <div class="card-title">Latency Distribution</div>
-      <div class="chart-wrap-tall">
-        <canvas id="day_2026_02_22_latChart"></canvas>
-      </div>
-    </div>
-  </div>
-
-</section>
-
-<script>
-(function() {
-  const COLORS  = ["#6ee7df", "#d4a0c8", "#f5c97e"];
-  const SOFT    = ["rgba(110,231,223,0.18)", "rgba(212,160,200,0.18)", "rgba(245,201,126,0.18)"];
-  const BCOLORS = ["#6ee7df", "#d4a0c8", "#f5c97e"];
-  const BSOFT   = ["rgba(110,231,223,0.18)", "rgba(212,160,200,0.18)", "rgba(245,201,126,0.18)"];
-  const gridColor = 'rgba(180,190,220,0.07)';
-  const tickColor = '#7a86a8';
-  const legendColor = '#a8b4cc';
-
-  new Chart(document.getElementById('day_2026_02_22_donutChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ["gpt-oss-120b", "grok-code-fast-1", "kimi-k2.5"],
-      datasets: [{ data: [0.768738, 0.620962, 0.605987], backgroundColor: SOFT, borderColor: COLORS, borderWidth: 1.5, hoverOffset: 5 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '68%',
-      plugins: {
-        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: legendColor } },
-        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.toFixed(6) } }
-      }
-    }
-  });
-
-  new Chart(document.getElementById('day_2026_02_22_barChart'), {
-    type: 'bar',
-    data: {
-      labels: ["gpt-oss-120b", "grok-code-fast-1", "kimi-k2.5"],
-      datasets: [
-        { label: 'Baseline', data: [11.8764, 9.5093, 8.5716], backgroundColor: 'rgba(120,130,160,0.25)', borderColor: 'rgba(120,130,160,0.6)', borderWidth: 1, borderRadius: 4 },
-        { label: 'Actual Cost', data: [0.7687, 0.621, 0.606], backgroundColor: BSOFT, borderColor: BCOLORS, borderWidth: 1.5, borderRadius: 4 },
-        { label: 'Savings', data: [11.1076, 8.8883, 7.9656], backgroundColor: 'rgba(110,231,223,0.1)', borderColor: '#6ee7df', borderWidth: 1, borderRadius: 4 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, color: legendColor } },
-        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(4) } }
-      },
-      scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 0 } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => '$' + v.toFixed(1) } }
-      }
-    }
-  });
-
-  new Chart(document.getElementById('day_2026_02_22_tlChart'), {
-    type: 'line',
-    data: { labels: ["07:12", "07:14", "07:31", "07:32", "07:53", "08:13", "08:26", "08:35", "08:43", "08:45", "08:49", "08:57", "09:01", "09:17", "09:22", "09:37", "09:43", "09:45", "09:46", "10:21", "10:29", "10:38", "11:09", "11:10", "11:20", "11:37", "11:57", "12:00", "12:07", "12:11", "12:44", "13:18", "13:28", "13:35", "13:47", "14:11", "14:52", "15:03", "15:11", "15:14", "15:19", "15:30", "16:03", "16:07", "16:13", "16:19", "16:29", "16:35", "16:42", "16:52", "17:52", "18:11", "18:36", "18:39", "18:40", "19:06", "19:31", "19:40", "19:59", "20:03", "20:06", "20:20", "20:26", "20:28", "20:50", "20:56", "21:10", "21:23", "21:30", "21:59", "22:20", "22:28", "22:44"], datasets: [{"label": "gpt-oss-120b", "data": [0.014281, 0, 0, 0, 0, 0.034218, 0, 0, 0, 0.032665, 0.027291, 0, 0.009437, 0.0479, 0, 0, 0, 0.015127, 0.041058, 0, 0.035868, 0, 0, 0, 0, 0.033833, 0, 0.035114, 0.030044, 0, 0.026906, 0, 0, 0.009869, 0.000367, 0, 0.019739, 0, 0, 0, 0.031542, 0.021164, 0, 0, 0, 0.03158, 0, 0.027728, 0, 0, 0, 0, 0, 0, 0, 0.005247, 0.018035, 0.014988, 0, 0, 0, 0.04517, 0.02443, 0.053144, 0, 0.017584, 0, 0.025011, 0, 0.039396, 0, 0, 0], "borderColor": "#6ee7df", "backgroundColor": "rgba(110,231,223,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "grok-code-fast-1", "data": [0.043478, 0.021478, 0.019917, 0.010226, 0.001483, 0, 0.033259, 0.028198, 0, 0, 0, 0.011728, 0, 0, 0, 0, 0.042654, 0, 0, 0.002154, 0, 0.033491, 0, 0, 0, 0, 0, 0, 0, 0.008741, 0, 0, 0.037343, 0, 0, 0.012427, 0, 0, 0.009063, 0, 0, 0, 0, 0.017462, 0, 0, 0.009104, 0, 0.045136, 0, 0.031419, 0.044824, 0, 0, 0, 0, 0, 0, 0.03504, 0, 0.014767, 0, 0, 0, 0, 0, 0, 0, 0.011415, 0.036608, 0.037275, 0.022272, 0], "borderColor": "#d4a0c8", "backgroundColor": "rgba(212,160,200,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}, {"label": "kimi-k2.5", "data": [0, 0, 0, 0, 0, 0, 0, 0, 0.046582, 0, 0, 0, 0, 0, 0.007768, 0.027195, 0, 0, 0, 0, 0, 0, 0.023697, 0.002298, 0.041402, 0, 0.06879, 0, 0, 0, 0, 0.0265, 0, 0, 0, 0, 0, 0.023828, 0, 0.007451, 0, 0, 0.00131, 0, 0.029061, 0, 0, 0.026366, 0, 0.014315, 0, 0, 0.038762, 0.046472, 0.009112, 0, 0, 0, 0, 0.015527, 0.027936, 0, 0, 0, 0.018552, 0, 0.040348, 0, 0, 0, 0, 0, 0.062715], "borderColor": "#f5c97e", "backgroundColor": "rgba(245,201,126,0.18)", "fill": true, "tension": 0.4, "pointRadius": 2}] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: legendColor } },
-        tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(6) } }
-      },
-      scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 18, maxRotation: 0 } },
-        y: { grid: { color: gridColor }, stacked: true, ticks: { color: tickColor, callback: v => '$' + v.toFixed(4) } }
-      }
-    }
-  });
-
-  new Chart(document.getElementById('day_2026_02_22_latChart'), {
-    type: 'bar',
-    data: {
-      labels: ["0-2s", "2-4s", "4-6s", "6-8s", "8-10s", "10-12s", "12-14s", "14-16s", "16-18s", "18s+"],
-      datasets: [{ label: 'Requests', data: [10, 10, 6, 13, 1, 8, 6, 9, 10, 8], backgroundColor: 'rgba(245,201,126,0.2)', borderColor: '#f5c97e', borderWidth: 1, borderRadius: 3 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, maxRotation: 45, font: { size: 9 } } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
-      }
-    }
-  });
 })();
 </script>
 
@@ -1292,6 +1425,9 @@ const observer = new IntersectionObserver(entries => {
   });
 }, { threshold: 0.25 });
 sections.forEach(s => observer.observe(s));
+
+// Sync toggle button label to saved theme after everything is rendered
+applyTheme(localStorage.getItem('blockrun-theme') || 'pastel', false);
 </script>
 </body>
 </html>
