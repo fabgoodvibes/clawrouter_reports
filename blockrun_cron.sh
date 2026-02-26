@@ -12,10 +12,10 @@ set -euo pipefail
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
 # Directory that contains usage-YYYY-MM-DD.jsonl files
-LOG_DIR="${BLOCKRUN_LOG_DIR:-/var/log/blockrun}"
+LOG_DIR="${BLOCKRUN_LOG_DIR:-/home/agent/.openclaw/blockrun/logs/}"
 
 # Where to write the final report.html
-OUTPUT_PATH="${BLOCKRUN_OUTPUT:-${LOG_DIR}/report.html}"
+OUTPUT_PATH="${BLOCKRUN_OUTPUT:-/home/agent/.openclaw/workspace/report.html}"
 
 # Path to the generator script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -25,7 +25,7 @@ GENERATOR="${BLOCKRUN_GENERATOR:-${SCRIPT_DIR}/generate_reports.py}"
 PYTHON="${BLOCKRUN_PYTHON:-python3}"
 
 # Optional: keep this many previous reports (set to 0 to disable rotation)
-KEEP_REPORTS="${BLOCKRUN_KEEP:-7}"
+KEEP_REPORTS="${BLOCKRUN_KEEP:-21}"
 
 # Optional: send a one-line summary to this log file (set to "" to disable)
 CRON_LOG="${BLOCKRUN_CRON_LOG:-${LOG_DIR}/cron.log}"
