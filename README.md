@@ -1,4 +1,4 @@
-# BlockRun Usage Reports for OpenClaw Router 
+# BlockRun Usage Reports
 
 Self-contained toolkit that scans a folder of daily `usage-YYYY-MM-DD.jsonl`
 log files and produces a single, fully offline HTML report with:
@@ -7,10 +7,6 @@ log files and produces a single, fully offline HTML report with:
 - **Per-day sections** — each with its own charts and stats
 - **Sticky sidebar navigation** — jump to any day instantly
 - **No external runtime dependencies** — pure Python 3 stdlib + one CDN JS file
-
----
-
-<img width="1906" height="933" alt="Screenshot from 2026-02-26 01-10-44" src="https://github.com/user-attachments/assets/f217dc49-25f5-4aeb-be60-06ba908a305a" />
 
 ---
 
@@ -113,22 +109,3 @@ Set `BLOCKRUN_KEEP=0` to disable archiving.
 - Python 3.8+
 - Internet access for the report viewer (loads Chart.js from jsDelivr CDN)
   - For fully offline use, download Chart.js and update the `<script>` src in `generate_reports.py`
-
----
-
-## License
-
-Copyright 2026 Fabio Pedrazzoli Grazioli
-
-Licensed under the MIT License
-
-https://opensource.org/license/mit
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-
